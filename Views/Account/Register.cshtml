@@ -1,0 +1,46 @@
+﻿@model AspNetIdentityApp.Models.RegisterModel
+
+@{
+    ViewBag.Title = "Register";
+}
+
+<h2>Регистрация</h2>
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="portlet-body form">
+        <a class="btn btn-default" href="/Account/Login">Войти</a>
+        <hr />
+        @Html.ValidationSummary(false)
+
+        <div class="form-group">
+            <label class="control-label">Электронный адрес</label>
+            <div>
+                @Html.EditorFor(model => model.Email, new { @class = "form-control" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="control-label">Пароль</label>
+            <div>
+                @Html.EditorFor(model => model.Password, new { @class = "form-control" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="control-label">Подтвердить пароль</label>           
+            <div>
+                @Html.EditorFor(model => model.PasswordConfirm, new { @class = "form-control" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div>
+                <button class="btn btn-default" type="submit" value="Зарегистрировать">Зарегистрировать</button>
+            </div>
+        </div>
+    </div>
+}

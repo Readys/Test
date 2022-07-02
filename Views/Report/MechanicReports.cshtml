@@ -1,0 +1,101 @@
+﻿
+@{
+    ViewBag.Title = "Отчеты по аттестациям механиков";
+}
+
+<h3>Отчеты</h3>
+<hr />
+
+    <div class="form-group" style="padding-bottom:0px">
+        <label for="CertificationIdForReport" class="col-2 col-form-label">Название аттестации</label>
+        <div class="col-10" style="margin-top:2px;">
+            <select class="form-control m-select2 select2-hidden-accessible" id="CertificationIdForReport" name="CertificationIdForReport" style="width:40%;margin-left:15px;">
+                <option value="" selected="selected"></option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group" style="padding-bottom:0px">
+        <label for="Level" class="col-2 col-form-label" style="padding-bottom:0px;">На какой уровень сдавали:</label>
+    </div>
+    <div class="col-10" style="margin-top:2px;">
+        <input class="form-control m-input" style="width:40%;" type="number" value="" id="Level" name="Level">
+    </div>
+    @*<a class="btn btn-outline-success m-btn m-btn--custom" onclick="SendAjaxForShortReport(); return false;" style="width:250px; margin-top:15px; margin-left:15px; font-size:15px;" id=""><span><i>Сформировать краткий отчет</i></span></a>*@
+    <a class="btn btn-outline-success m-btn m-btn--custom" onclick="SendAjaxForDetailedReport(); return false;" style="width:250px; margin-top:15px; margin-left:15px; font-size:15px;" id=""><span><i>Сформировать  отчет</i></span></a>
+<hr />
+
+
+
+
+
+@section Styles{
+
+}
+@section Scripts{
+
+    <script>
+
+        $(document).ready(function () {
+
+
+            function formatRepo(model) {
+                return model.Name;
+            }
+
+            function formatRepoSelection(model) {
+                return model.Name;
+            }
+
+            $('#CertificationIdForReport').select2({
+                ajax: {
+                    url: "/TTS/GetCertificationForReports",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            search: params.term,
+                            page: params.page,
+
+                        };
+                    },
+                    processResults: function (data, params) {
+
+                        var dataC = $.map(data.attArr, function (obj) {
+                            obj.id = obj.id || obj.AttestationId; // replace pk with your identifier
+
+                            return obj;
+                        });
+
+                        return { results: dataC };
+                    },
+                    cache: false
+                },
+                placeholder: '',
+                //id: function (item) { return item.CustomerId },
+                // text: function (item) { return item.Name },
+                escapeMarkup: function (markup) { return markup },
+                minimumInputLength: 3,
+                templateResult: formatRepo,
+                templateSelection: formatRepoSelection,
+
+            }); 
+
+        });
+
+        function SendAjaxForShortReport() {
+            //mApp.blockPage('.page-content');
+            var certId = $('#CertificationIdForReport').val();
+            var lvlId = $('#Level').val();
+            var queryString = "/Report/CreateShortExcel?CertificationId=" + certId + "&Level=" + lvlId;
+            window.location.href = queryString;
+        };
+
+        function SendAjaxForDetailedReport() {
+            var certId = $('#CertificationIdForReport').val();
+            var lvlId = $('#Level').val();
+            var queryString = "/Report/CreateDetailedExcel?CertificationId=" + certId + "&Level=" + lvlId;
+            window.location.href = queryString;
+        }
+
+    </script>
+}

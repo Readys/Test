@@ -1,0 +1,206 @@
+﻿@model IEnumerable<TTS.Models.ViewAttestation>
+@using TTS.Models;
+@{
+    ViewBag.Title = "Аттестации";
+    ViewBag.Description = "";
+
+    var tree = (List<Tree>)ViewBag.Tree;
+    var appUserId = ViewBag.AppUserId;
+    var allLevels = tree.Where(w => w.TypeId == 3);
+    var testTemplateItem = (List<TestTemplateItem>)ViewBag.TestTemplateItem;
+    var tests = (List<Tests>)ViewBag.Tests;
+    IEnumerable<UserInRole> access = ViewBag.Access;
+    DateTime CurrentDateTime = ViewBag.currentTime;
+    IEnumerable<Attestation> attestation = ViewBag.Attestation;
+    IEnumerable<ViewAttestation> allAttestationList = ViewBag.AllAttestationList;
+    IEnumerable<AttestationEmployeeItems> allAttestationEmployeeItems = ViewBag.AllAttestationEmployeeItems;
+
+
+    var tabs = ViewBag.tabs;
+
+    //var thisTestid = 0;
+    //var thisFeedid = 0;
+
+}
+
+<style>
+    tbody tr {
+        cursor: pointer;
+    }
+
+    table td {
+        border: 1px solid #999 !important;
+
+    }
+    table th {
+        border: 1px solid #999 !important;
+    }
+
+
+</style>
+
+<div class="portlet-body">
+
+    <div id="Tabs" class="col-lg-6">
+        <ul class="nav nav-pills nav-fill" role="tablist">
+            @{
+                if (Model.Any(x => x.AttestationEmployeeItems.Any(a => a.UserID == appUserId)))
+                {
+                    var attestationIdArr2 = allAttestationEmployeeItems.Where(w => w.UserID == appUserId).Select(s => s.AttestationId).ToArray();
+                    var attestationList = allAttestationList.Where(w => attestationIdArr2.Contains(w.Attestation.AttestationId) && w.Attestation.FinishTime > DateTime.Now).ToList();
+                    <li class="nav-item">
+                        <a v-if="tab == 3" class="nav-link active show" href="#">
+                            Мои активные аттестации -  @attestationList.Count()
+                        </a>
+                        <a v-else class="nav-link" href="@Url.Action("Index", new { tabs = 3 })">
+                            Мои активные аттестации -  @attestationList.Count()
+                        </a>
+                    </li>
+                }
+                if (Model.Any(x => x.AttestationEmployeeItems.Any(a => a.UserID == appUserId)))
+                {
+                    var attestationIdArr2 = allAttestationEmployeeItems.Where(w => w.UserID == appUserId).Select(s => s.AttestationId).ToArray();
+                    var attestationList = allAttestationList.Where(w => attestationIdArr2.Contains(w.Attestation.AttestationId) && w.Attestation.FinishTime < DateTime.Now).ToList();
+                    <li class="nav-item">
+                        <a v-if="tab == 2" class="nav-link active show" href="#">
+                            Мои архивные аттестации -  @attestationList.Count()
+                        </a>
+                        <a v-if="tab != 2" class="nav-link" href="@Url.Action("Index", new { tabs = 2 })">
+                            Мои архивные аттестации -  @attestationList.Count()
+                        </a>
+                    </li>
+                }
+                //Все аттестации если есть доступ
+                if (access.Any() && attestation.Count() > 0)
+                {
+                    <li class="nav-item">
+                        <a v-if="tab == 1" class="nav-link active show" href="#">
+                            Все аттестации - @attestation.Count()
+                        </a>
+                        <a v-if="tab != 1" class="nav-link" href="@Url.Action("Index", new { tabs = 1 })">
+                            Все аттестации - @attestation.Count()
+                        </a>
+                    </li>
+                }
+
+            }
+        </ul>
+    </div>
+
+    <div class="table-container">
+        <div class="tabbable-line">
+
+        </div>
+    </div>
+
+    <form method="get" id="filterForm" class="form-horizontal">
+        <div class="form-body">
+            <input type="hidden" name="page" value="1" />
+            <div class="table-responsive">
+                <table class="table table-bordered margin-top-20">
+                    <thead>
+                        <tr >
+                            <th style="text-align: left; max-width:30px;">
+                                №
+                            </th>
+                            <th style="text-align: left; width: 120px">
+                                Аттестация
+                            </th>
+                            <th style="text-align: left; width: 120px">
+                                Начало
+                            </th>
+                            <th style="text-align: left; width: 120px">
+                                Завершение
+                            </th>
+                            <th style="text-align: left; width: 120px">
+                                Темы
+                            </th>
+                            <th style="text-align: center;">
+                                Время
+                            </th>
+                            <th style="text-align: center; ">
+                                Сложность
+                            </th>
+                            <th style="text-align: center;  max-width:100px;">
+                                Дивизионы
+                            </th>
+                            @if (access.Any())
+                            {
+                                <!--
+                                <th style="text-align: center; max-width:80px;">
+                                    Управление
+                                </th>
+                                    -->
+                            }
+                        </tr>
+                    </thead>
+                    @if (Model != null)
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr title="Просмотр" onclick=" window.location = '@Url.Action("DisplayAtt", "TTS", new {id = item.Attestation.AttestationId})' ">
+                                <td style="vertical-align: middle; text-align: left;">
+                                    @item.Attestation.AttestationId
+                                </td>
+                                <td style="vertical-align: middle; text-align: left; width:300px;">
+                                    @item.AttestationName
+                                </td>
+                                <td style="vertical-align: middle; text-align: left; width:50px;">
+                                    @String.Format("{0:dd.MM.yyyy}", item.Attestation.StartTime)
+                                </td>
+                                <td style="vertical-align: middle; text-align: left; width:50px;">
+                                    @String.Format("{0:dd.MM.yyyy}", item.Attestation.FinishTime)
+                                </td>
+                                <td style="vertical-align: middle; text-align: left;">
+                                    @foreach (var item2 in item.SelectCategoryList)
+                                    {
+                                        //var quantity = testTemplateItem.SingleOrDefault(s => s.TestTemplateId == item.TestTemplateId && s.CategoryId == item2.TreeId).QuestionQuantity;
+                                        <a class="btn btn-warning btn-sm" href="#">@item2.NameRu </a><br /><br />
+                                    }
+                                </td>
+                                <td style="vertical-align: middle; text-align: center;">
+                                    @item.Duration
+                                </td>
+                                <td style="vertical-align: middle; text-align: center;">
+                                    @foreach (var item4 in item.LevelsList)
+                                    {
+                                        <span class="badge badge-info">@item4.NameRu </span>
+                                    }
+                                </td>
+                                <td style="vertical-align: middle; text-align: left;">
+                                    @foreach (var item3 in item.DepartmentList)
+                                    {
+                                        <span class="badge badge-info">@item3.NameRu</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </table>
+
+            </div>
+        </div>
+    </form>
+
+    <hr />
+    <div class="todo-tasklist-devider"></div>
+</div>
+
+<script type="text/javascript">
+
+    var vm1 = new Vue({
+        el: '#Tabs',
+        data: {
+            tab: @tabs, 
+
+        },
+        computed: {
+        },
+        methods: {
+
+        }
+    });
+
+        //location.replace("/TTS/");
+
+</script>

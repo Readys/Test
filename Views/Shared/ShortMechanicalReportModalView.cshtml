@@ -1,0 +1,99 @@
+﻿@*<div class="modal fade" id="ShortReportModal" role="dialog" aria-labelledby="ShortReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ShortReportModalLabel">Краткий отчет</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label style="margin-left: 5px;" for="#CertificationNameModal" class="form-control-label">Название Аттестации:</label>
+                        <select  class="form-control m-select2" id="CertificationNameModal" name="CertificationNameModal">
+                            <option value="1" selected="selected"></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="Level" class="form-control-label">Уровень:</label>
+                        <input type="number" class="form-control" id="Level">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success">Сформировать отчет</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section styles{
+
+
+
+}
+
+@section scripts{
+    <script>
+
+        $(document).ready(function () {
+            function formatRepo(model) {
+                return model.Name;
+            }
+
+            function formatRepoSelection(model) {
+                return model.Name;
+            }
+
+             $("#CertificationNameModal").select2({
+                dropdownParent: $("#ShortReportModal")
+            });
+          
+
+
+            $('#CertificationNameModal').select2({
+                ajax: {
+                    url: "/TTS/GetCertifacation",
+                    dataType: 'json',
+                    delay: 250,                   
+                    data: function (params) {
+                        return {
+                            search: params.term,
+                            page: params.page,
+
+                        };
+                    },
+                    processResults: function (data, params) {
+
+                        var dataC = $.map(data.attArr, function (obj) {
+                            obj.id = obj.id || obj.AttestationId; // replace pk with your identifier
+
+                            return obj;
+                        });
+
+                        return { results: dataC };
+                    },
+                    cache: false
+                },
+                placeholder: '',
+                //id: function (item) { return item.CustomerId },
+                // text: function (item) { return item.Name },
+                escapeMarkup: function (markup) { return markup },
+                minimumInputLength: 3,
+                templateResult: formatRepo,
+                templateSelection: formatRepoSelection,
+              
+            });
+
+            $.ui.dialog.prototype._allowInteraction = function (e) {
+                return !!$(e.target).closest('.ui-dialog, .ui-datepicker, .select2-drop').length;
+            };
+
+           
+        })
+    </script>
+
+
+}*@

@@ -1,0 +1,348 @@
+﻿@model IEnumerable<TTS.Models.Question>
+
+@using TTS.Models;
+@using PagedList;
+@using PagedList.Mvc
+@{
+    ViewBag.Title = "Вопросы";
+    ViewBag.Description = "";
+
+    var questions = ViewBag.Questions; //(List<Question>)
+    var questionsWrong = (List<Question>)ViewBag.QuestionsWrong;
+    var tree = (List<Tree>)ViewBag.Tree;
+    var category = (List<TreeQuestion>)ViewBag.Category;
+    var questionsNotPublished = (List<Question>)ViewBag.QuestionsNotPublished;
+    var haveFileQuestion = (List<ViewQuestion>)ViewBag.HaveFileQuestion;
+    var appUser = ViewBag.AppUser;
+    var access = (List<UserInRole>)ViewBag.Access;
+
+}
+
+@if (access.Any())
+{
+
+    <style>
+        table td {
+            border: 1px solid #999 !important;
+        }
+
+        table th {
+            border: 1px solid #999 !important;
+        }
+    </style>
+
+    <div class="actions">
+        <a class="btn btn-success btn-lg" href="/TTS/CreateQuestions?id=0">Создать новый вопрос</a>
+    </div>
+    <br />
+    <div class="portlet">
+        <div class="portlet-title">
+            <div class="caption">
+                @if (questionsWrong.Count > 0)
+                {
+                    <text><span style="color:red;">Неправильно указан вес ответов в опубликованных вопросах:</span></text>
+                    foreach (var qw in questionsWrong)
+                    {
+                        <a href="/TTS/CreateQuestions?id=@qw.QuestionId">@qw.QuestionId;</a>
+                    }
+                }
+                <br />
+                @if (questionsNotPublished.Count > 0)
+                {
+                    <text><span style="color:orangered;">Не опубликованные вопросы:</span></text>
+                    foreach (var qnp in questionsNotPublished)
+                    {
+                        <span>@qnp.QuestionId;</span>
+                    }
+                }
+            </div>
+            <div class="actions">
+            </div>
+        </div>
+        <br />
+        <div class="portlet-body">
+            <form method="get" id="filterForm" class="form-horizontal">
+                <div class="form-body">
+                    <input type="hidden" name="page" value="1" />
+                    <div class="table-responsive">
+                        <table class="table table-bordered  margin-top-20">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left; width: 140px">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control" name="QuestionId" value="@Request.QueryString["QuestionId"]" placeholder="№">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-secondary" type="submit"><i class="fa fa-filter"></i></button>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th style="text-align: left; width: 140px">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control" name="HavePic" value="@Request.QueryString["HavePic"]" placeholder="№" />
+                                            <span class="input-group-append">
+                                                <button class="btn btn-secondary" type="submit"><i class="fa fa-filter"></i></button>
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th style="text-align: left; width: 220px;">
+                                        @{ var DepartmentList = new SelectList(tree.Where(w => w.TypeId == 2).Select(s => new { s.TreeId, s.NameRu }).Distinct(), "TreeId", "NameRu", Request.QueryString["DepartmentId"]);}
+                                        @Html.DropDownList("DepartmentId", DepartmentList, "", new { @class = "form-control filter-selectD", @style = "font-size: 12px; max-width:200px;", @placeholder = "Департамент" })
+                                    </th>
+                                    <th style="text-align: left; width: 500px">
+                                        Название
+                                    </th>
+                                    <th style="text-align: left; width: 200px">
+                                        @{ var subjectList = new SelectList(tree.Where(w => w.TypeId == 1).Select(s => new { s.TreeId, s.NameRu }).Distinct(), "TreeId", "NameRu", Request.QueryString["SubjectId"]);}
+                                        @Html.DropDownList("SubjectId", subjectList, "", new { @class = "form-control filter-select", @style = "font-size: 12px;", @placeholder = "Тема" })
+                                    </th>
+                                    <th style="text-align: center; width: 120px; ">
+                                        Сложность
+                                    </th>
+                                    <th style="text-align: center; width: 120px">
+                                        Публикация
+                                    </th>
+                                    <th style="text-align: center; width: 120px">
+                                        Управление
+                                    </th>
+                                </tr>
+                            </thead>
+                            @if (questions != null)
+                            {
+                                foreach (var item in questions)
+                                {
+                                    var QuestionWithFiles = haveFileQuestion.SingleOrDefault(w => w.QuestionId == item.QuestionId);
+
+                                    <tr>
+                                        <td style="vertical-align: middle; text-align: left; width: 140px;">
+                                            @item.QuestionId
+                                        </td>
+                                        <td style="vertical-align:middle; text-align: left; width: 140px;">
+                                            @if (QuestionWithFiles != null && QuestionWithFiles.PictureList.Count > 0)
+                                            {
+                                                foreach (var pic in QuestionWithFiles.PictureList)
+                                                {
+                                                    <a href="/images?id=@pic" target="_blank"><img style="max-height:50px; max-width:100%; display: block;" src="/images?id=@pic" /></a>
+                                                }
+                                            }
+                                        </td>
+                                        <td style="vertical-align:middle; text-align: left; width: 220px;">
+                                            @{
+                                                var departmentsId = category.Where(w => w.TypeId == 2 && w.QuestionId == item.QuestionId).Select(s => s.TreeId).ToArray();
+                                                var departments = tree.Where(w => departmentsId.Contains(w.TreeId)).ToList();
+                                                foreach (var item2 in departments)
+                                                {
+                                                    <span class="badge badge-info">@item2.NameRu</span>
+                                                }
+                                            }
+                                        </td>
+                                        <td style="vertical-align: middle; text-align: left; width: 500px">
+                                            @item.QuestionRu
+                                        </td>
+                                        <td style="vertical-align: middle; text-align: left;">
+                                            @{
+                                                var questionArrId = category.Where(w => w.TypeId == 1 && w.QuestionId == item.QuestionId).Select(s => s.TreeId).ToArray();
+                                                var categoryList = tree.Where(w => w.TypeId == 1 && questionArrId.Contains(w.TreeId)).ToList();
+                                                if (questionArrId != null)
+                                                {
+                                                    foreach (var cat in categoryList)
+                                                    {
+                                                        <span class="badge badge-info">@cat.NameRu</span>
+                                                    }
+                                                }
+                                            }
+                                        </td>
+                                        <td style="vertical-align: middle; text-align: center;">
+                                            @{
+                                                var levelsArrId = category.Where(w => w.TypeId == 3 && w.QuestionId == item.QuestionId).Select(s => s.TreeId).ToArray();
+                                                var levelsList = tree.Where(w => w.TypeId == 3 && levelsArrId.Contains(w.TreeId)).ToList();
+                                                if (levelsArrId != null)
+                                                {
+                                                    foreach (var level in levelsList)
+                                                    {
+                                                        <span class="badge badge-info">@level.NameRu</span>
+                                                    }
+                                                }
+                                            }
+                                        </td>
+                                        <td style="vertical-align: middle; text-align: center;">
+                                            @if (item.Published == 1)
+                                            {
+                                                <input class="f-selectL" name="" type="checkbox" value="@item.QuestionId" checked>
+                                            }
+                                            else
+                                            {
+                                                <input class="f-selectL" name="" type="checkbox" value="@item.QuestionId">
+                                            }
+                                        </td>
+                                        <td style="vertical-align: middle; text-align: left; width:120px;">
+                                            <a class="btn btn-success btn-sm" href="/TTS/CreateQuestions?id=@item.QuestionId"><i class=" fa fa-pencil-alt"></i></a>
+                                            <a id="" class="btn btn-danger btn-sm trash" data-index="@item.QuestionId" data-name="@item.QuestionRu" href="javascript:;"><i class=" fa fa-trash-alt"></i></a>
+                                        </td>
+                                    </tr>
+
+                                }
+                            }
+                        </table>
+
+                    </div>
+                </div>
+            </form>
+
+            <hr />
+            <div class="todo-tasklist-devider"></div>
+
+            @{
+
+                if (questions != null)
+                {
+                    @Html.PagedListPager((IPagedList)questions, page => Request.CurrentExecutionFilePath + "?page=" + page)
+                }
+
+
+            }
+        </div>
+
+    </div>
+
+}
+
+<div id="DelQ" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Удаление вопроса</h4>
+                <button type="button" class="close Unblok" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="swal2-icon swal2-warning swal2-animate-warning-icon" style="display: flex;"><span class="swal2-icon-text">!</span></div>
+                <h2 align="center" class="swal2-title" id="swal2-title">Вы действительно намерены удалить вопрос?</h2>
+            </div>
+            <div class="modal-footer" style="color:red;">
+                <button type="button" class="btn btn-danger trash">Удалить вопрос</button>
+                <button type="button" class="btn btn-default Unblok" data-dismiss="modal">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <!-- BEGIN PAGE LEVEL STYLES -->
+    <!-- END PAGE LEVEL STYLES -->
+    <link rel="stylesheet" type="text/css" href="~/Content/css/select2.min.css" />
+    <link href="~/Content/PagedList.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+}
+@section Scripts {
+    <script src="~/Scripts/axios.min.js"></script>
+    <script src="~/Scripts/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script>
+
+    <script>
+        function deleteSweetalert(name, id, adress, redirect) {
+            Swal.queue([{
+                title: 'Вы действительно намерены удалить: ' + name + '?',
+                confirmButtonText: 'Удалить',
+                type: 'warning',
+                cancelButtonText: 'Отмена',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return axios.post(adress, { id: id }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    }).then(response => {
+                        if (response.data) {
+                            Swal.insertQueueStep({
+                                type: 'warning',
+                                title: '"' + name + '"' + ' - объект успешно удален!',
+                                timer: 1500,
+                            });
+                            if (response.data=='OK') {
+                                //vm.arr = vm.arr.filter(f=>f.id != id)
+                            }
+                            if (redirect) {
+                                window.location = redirect;
+                            }                          
+                        }
+                    }).catch(error => {
+                        Swal.insertQueueStep({
+                            type: 'error',
+                            title: '"' + name + '"' + ' - объект НЕ был удален!',
+                            text: 'Программная ошибка!'
+                        });
+                    });
+
+                }
+            }])
+
+
+        }
+    </script>
+
+
+    <script>
+        jQuery(document).ready(function () {
+            var qId = 0;
+
+            $('.trash').on("click", function (e) {
+                console.log(e);
+                qId = $(this).data("index");
+                var name = $(this).data("name");
+
+                deleteSweetalert(name, qId, '/AJAX/DeleteQuestion/', '/TTS/Questions/');
+
+            });
+
+
+            $(".filter-select").select2({
+                allowClear: true,
+                placeholder: "Тема",
+                text: "Select an option"
+            }).on("change", function () {
+                $("#filterForm").submit();
+            });
+
+            $(".filter-selectD").select2({
+                allowClear: true,
+                placeholder: "Департамент",
+                text: "Select an option"
+            }).on("change", function () {
+                $("#filterForm").submit();
+            });
+        });
+
+        $('.f-selectL').on("change", function (e) {
+            mApp.blockPage('.page-content');
+            var selected_element = $(e.currentTarget);
+            var select_val = selected_element.val();
+            axios.post('/AJAX/Published/', { id: select_val }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then(response => {
+                mApp.unblockPage('.page-content');
+                //alert(response.data);
+            }).catch(error => {
+                mApp.unblockPage('.page-content');
+                alert('Error')
+            });
+        });
+
+
+
+        $('.DelQuestion').on("click", function (e) {
+            var index = $(this).data("index");
+            qId = index;
+            $('#DelQ').modal('show');
+            mApp.blockPage('.page-content');
+        });
+
+        $('.Unblok').on("click", function (e) {
+            mApp.unblockPage('.page-content');
+        });
+
+
+    </script>
+}
+

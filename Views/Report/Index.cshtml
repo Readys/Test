@@ -1,0 +1,162 @@
+﻿@model IEnumerable<TTS.Models.Attestation>
+@using TTS.Models;
+@using PagedList;
+@using PagedList.Mvc
+@{
+    ViewBag.Title = "Отчеты";
+    ViewBag.Description = "";
+
+    var tree = (List<Tree>)ViewBag.Tree;
+    var appUserId = ViewBag.AppUserId;
+    var allLevels = tree.Where(w => w.TypeId == 3);
+    var templates = (List<TestTemplate>)ViewBag.Template;
+    var tests = (List<Tests>)ViewBag.Tests;
+    IEnumerable<UserInRole> access = ViewBag.Access;
+
+    //var AttestationsTem = db.Attestations.Select(x => x.LMUserId);
+
+}
+
+<style>
+    tbody tr {
+        /*cursor: pointer;*/
+    }
+    table td {
+        border: 1px solid #999 !important;
+    }
+
+    table th {
+        border: 1px solid #999 !important;
+    }
+</style>
+
+<div class="portlet">
+    <div class="portlet-title">
+        <div class="caption">
+            <br />
+        </div>
+        <div class="actions">
+            <!--<a class="btn btn-success" href="/TTS/CreateQuestions?id=0">Создать новый вопрос</a>
+                 -->
+        </div>
+
+    </div>
+    <br />
+    <div class="portlet-body">
+        <form method="get" id="filterForm" class="form-horizontal">
+            <div class="form-body">
+                <input type="hidden" name="page" value="1" />
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover margin-top-20">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;">
+                                    №
+                                </th>
+                                <th style="text-align: center;">
+                                    Название
+                                </th>
+                                <th style="text-align: center;">
+                                    Время
+                                </th>
+                                <th style="text-align: center;">
+                                    Шаблон
+                                </th>
+                                <th style="text-align: center;">
+                                    @{ var subjectList = new SelectList(tree.Where(w => w.TypeId == 3).Select(s => new { s.LevelNumber, s.NameRu }).Distinct(), "LevelNumber", "NameRu", Request.QueryString["LevelId"]);}
+                                    @Html.DropDownList("LevelId", subjectList, "", new { @class = "form-control filter-select", @style = "font-size: 12px;", @placeholder = "Уровень" })
+                                </th>
+                                <th style="text-align: center;">
+                                    Отчет
+                                </th>
+                            </tr>
+                        </thead>
+                        @if (Model != null)
+                        {
+                            foreach (var item in Model)
+                            {
+                                if (item.TestTemplateId > 0)
+                                {
+                                    <tr>
+                                        <td style="vertical-align: middle; text-align: left; width:4%;">
+                                            @item.AttestationId
+                                        </td>
+                                        <td style="vertical-align: middle; text-align: left; width:30%;">
+                                            @item.AttestationName
+                                        </td>
+                                        <td style="vertical-align: middle; text-align: center; width:20%;">
+                                            @String.Format("{0:dd.MM.yyyy}", item.StartTime) - @String.Format("{0:dd.MM.yyyy}", item.FinishTime)
+                                        </td>
+                                        <td style="vertical-align: middle; text-align: center; width:25%;">
+                                            @{
+
+                                                    var templateName = templates.FirstOrDefault(s => s.TestTemplateId == item.TestTemplateId).NameRu;
+                                                    @templateName
+                                                }
+                                        
+                                        </td>
+                                        <td style="vertical-align: middle; text-align: center; width:12%;">
+                                            @{
+                                                //var templateLevelId = templates.SingleOrDefault(s => s.TestTemplateId == item.TestTemplateId).LevelId;
+                                                //var templateLevelName = tree.SingleOrDefault(s => s.TreeId == templateLevelId).NameRu;
+                                                @item.CertificationLevelToPass
+                                            }
+                                        </td>
+                                        <td style="vertical-align: middle; text-align: left; width:9%;">
+                                            <a class="btn btn-success" onclick="window.location = '@Url.Action("CreateDetailedExcel", "Report", new { CertificationId = item.AttestationId, Level = item.CertificationLevelToPass  })' " href="javascript:;">
+                                                Выгрузить отчет
+                                            </a>
+                                        </td>
+
+                                    </tr>
+                                }
+                            }
+                        }
+                    </table>
+                </div>
+            </div>
+        </form>
+                <hr />
+                <div class="todo-tasklist-devider"></div>
+                @{
+                    if (Model != null)
+                    {
+                        @Html.PagedListPager((IPagedList)Model, page => Request.CurrentExecutionFilePath + "?page=" + page)
+                    }
+                }
+            </div>
+
+    </div>
+
+
+
+@section Styles {
+    <!-- BEGIN PAGE LEVEL STYLES -->
+    <link href="/assets/global/css/PagedList.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/PagedList.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <!-- END PAGE LEVEL STYLES -->
+}
+@section Scripts {
+
+
+
+    <script>
+        jQuery(document).ready(function () {
+
+            $("#LevelId").select2({
+                minimumResultsForSearch: -1,
+                allowClear: true,
+                placeholder: "Уровень",
+                text: "Select an option"
+            }).on("change", function () {
+                $("#filterForm").submit();
+            });
+
+
+        });
+
+
+    </script>
+}
+

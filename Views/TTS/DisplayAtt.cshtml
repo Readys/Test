@@ -1,0 +1,170 @@
+﻿@model TTS.Models.Attestation
+@using TTS.Models;
+@{
+
+    ViewBag.Title = Model.AttestationName;
+    var tests = (List<Tests>)ViewBag.Tests;
+    int maxtest = ViewBag.Maxtest;
+    var bonus = 1;
+    if (maxtest < 99) { maxtest = maxtest + bonus; }
+    string statusTestMsg = ViewBag.StatusTestMsg;
+    int statusTest = ViewBag.StatusTest;
+    int threshold = ViewBag.Threshold;
+    int testid = 0;
+
+    Tests hasOpenTest = new Tests();
+
+    //var tree = (List<Tree>)ViewBag.Tree;
+
+
+}
+
+<style>
+    tbody tr {
+        cursor: pointer;
+    }
+</style>
+<div class="table">
+    <div class="row">
+        <div class="col-lg-12">
+            @{
+                switch (statusTest)
+                {
+                    // Все условия выполнены для начала тестирования
+                    case 1:
+                        try
+                        {
+                            hasOpenTest = tests.SingleOrDefault(s => s.Finished != 1);
+                        }
+                        catch
+                        {
+
+                        }
+                        finally
+                        {
+                            testid = hasOpenTest.TestId;
+
+                        }
+                        <a class="btn btn-success btn-lg center-block" href="/TTS/PassTest?testTemplateId=@Model.TestTemplateId&attestationId=@Model.AttestationId&testId=@testid">Начать тестирование</a>
+                        break;
+                    case 2: //
+                        <div class="m-alert m-alert--icon m-alert--air alert alert-success alert-dismissible fade show" role="alert">
+                            <div class="m-alert__icon">
+                                <i class="la la-warning"></i>
+                            </div>
+                            <div class="m-alert__text">
+                                <span style="font-size:110%">Тестирование успешно пройдено! Вы набрали @maxtest  баллов из @threshold пороговых.</span>
+                            </div>
+                        </div>
+                        break;
+                    case 3: //
+                        <div class="m-alert m-alert--icon m-alert--air alert alert-danger alert-dismissible fade show" role="alert">
+                            <div class="m-alert__icon">
+                                <i class="la la-warning"></i>
+                            </div>
+                            <div class="m-alert__text">
+                                <span style="font-size:110%">Тестирование НЕ пройдено! Вы набрали @maxtest баллов из @threshold пороговых.</span>
+                            </div>
+                        </div>
+                        break;
+                    case 4: //
+                        <div class="m-alert m-alert--icon m-alert--air alert alert-danger alert-dismissible fade show" role="alert">
+                            <div class="m-alert__icon">
+                                <i class="la la-warning"></i>
+                            </div>
+                            <div class="m-alert__text">
+                                <span style="font-size:110%">Попытки закончились.</span>
+                            </div>
+                        </div>
+                        break;
+                    case 5: //
+                        <div class="m-alert m-alert--icon m-alert--air alert alert-info alert-dismissible fade show" role="alert">
+                            <div class="m-alert__icon">
+                                <i class="la la-warning"></i>
+                            </div>
+                            <div class="m-alert__text">
+                                <span style="font-size:110%">Должен активировать руководитель аттестации.</span>
+                            </div>
+                        </div>
+                        break;
+                    case 6: //
+                        <div class="m-alert m-alert--icon m-alert--air alert alert-info alert-dismissible fade show" role="alert">
+                            <div class="m-alert__icon">
+                                <i class="la la-warning"></i>
+                            </div>
+                            <div class="m-alert__text">
+                                <span style="font-size:110%">Период аттестации еще не наступил.</span>
+                            </div>
+                        </div>
+                        break;
+                    case 7: //
+                        <div class="m-alert m-alert--icon m-alert--air alert alert-danger alert-dismissible fade show" role="alert">
+                            <div class="m-alert__icon">
+                                <i class="la la-warning"></i>
+                            </div>
+                            <div class="m-alert__text">
+                                <span style="font-size:110%">Аттестация завершена и вы не успели ее пройти.</span>
+                            </div>
+                        </div>
+                        break;
+                    case 8: //
+                        <div class="m-alert m-alert--icon m-alert--air alert alert-info alert-dismissible fade show" role="alert">
+                            <div class="m-alert__icon">
+                                <i class="la la-warning"></i>
+                            </div>
+                            <div class="m-alert__text">
+                                <span style="font-size:110%">Тестирование не пройдено. Есть еще одна попытка.</span>
+                            </div>
+                        </div>
+                        <a class="btn btn-success btn-lg center-block" href="/TTS/PassTest?testTemplateId=@Model.TestTemplateId&attestationId=@Model.AttestationId&testId=0">Пройти тестирование</a>
+                        break;
+                    case 9: //
+                        <div class="m-alert m-alert--icon m-alert--air alert alert-info alert-dismissible fade show" role="alert">
+                            <div class="m-alert__icon">
+                                <i class="la la-warning"></i>
+                            </div>
+                            <div class="m-alert__text">
+                                <span style="font-size:110%">Тестирование все еще активно. Продолжить?</span>
+                            </div>
+                        </div>
+                        <a class="btn btn-success btn-lg center-block" href="/TTS/PassTest?testTemplateId=@Model.TestTemplateId&attestationId=@Model.AttestationId&testId=0">Продолжить тестирование</a>
+                        break;
+                    default:
+                        <div class="m-alert m-alert--icon m-alert--air alert alert-success alert-dismissible fade show" role="alert">
+                            <div class="m-alert__icon">
+                                <i class="la la-warning"></i>
+                            </div>
+                            <div class="alert alert-danger" role="alert">
+                                <span style="font-size:110%"> Неизвестная ошибка..</span>
+                            </div>
+                        </div>
+
+                        break;
+                }
+
+
+            }
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12" style="margin-top:20px;">
+            <a class="btn btn-danger btn-lg" href="/">Перейти на главную страницу</a>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+@section Scripts
+{
+
+
+}
+
+@section Styles{
+
+
+}

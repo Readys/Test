@@ -1,0 +1,467 @@
+﻿@model IEnumerable<TTS.Models.ViewPassTest>
+@using TTS.Models;
+@{
+    ViewBag.Title = "Прохождение теста";
+    ViewBag.Description = "";
+
+
+    //double totalMill = (new TimeSpan(DateTime.Now.Ticks)).TotalMilliseconds;
+    var id = ViewBag.TestTemplateId;
+    var duration = ViewBag.Time;
+    var v = Model;
+    var page = ViewBag.Progress;
+    var finished = ViewBag.Finished;
+    var tryCountNow = ViewBag.TryCountNow;
+    var maxCount = ViewBag.MaxCount;
+
+    if (page == null) { page = 0; }
+}
+
+<div id="appcountdown">
+    <span></span>
+    <p>
+        <countdown></countdown>
+    </p>
+</div>
+<div id="trycount">
+    <p>Попытка №  @tryCountNow из @maxCount</p>
+</div>
+
+<div id="apptest">
+    <paginated-list :list-data="people" :size="1" />
+</div>
+
+@section Styles {
+    <!-- BEGIN PAGE LEVEL STYLES -->
+    <!-- END PAGE LEVEL STYLES -->
+}
+@section Scripts {
+    <script src="~/Scripts/vue.js"></script>
+    <script src="~/Scripts/axios.min.js"></script>
+    <script src="~/Scripts/polyfill.min.js"></script>
+
+    <script>
+        Vue.component('countdown', {
+            template: `
+  <section class="countdown">
+
+    <div v-show="!expired" class="timer">
+      <div class="box">
+        <div class="spacer"></div>
+        <span class="label">Время до завершения теста:</span>
+        <span class="label">Часы: </span>
+        <span class="value">{{ theTime.hours }}</span>
+        <span class="label"> Минуты: </span>
+        <span class="value">{{ theTime.minutes }} </span>
+        <span class="label"> Секунды: </span>
+        <span class="value">{{ theTime.seconds }} </span>
+      </div>
+    </div>
+
+    <div v-show="expired" class="expired-timer timer">
+      <div class="box">
+        <div class="spacer"></div>
+        <p class="value">Время вышло!</p>
+      </div>
+    </div>
+
+  </section>
+`,
+            data() {
+                return {
+                    deadline: new Date().getTime() + @duration,
+                    days: '',
+                    hours: '',
+                    minutes: '',
+                    seconds: '',
+                    expired: false
+                };
+            },
+
+            computed: {
+                theTime() {
+                    var ctx = this;
+                    // Countdown loop
+                    var x = setInterval(function () {
+
+                        // Difference between the 2 dates
+                        var countDownDate = new Date(ctx.deadline).getTime(),
+                            now = new Date().getTime(),
+                            diff = countDownDate - now,
+
+                            // Time conversion to days, hours, minutes and seconds
+                            tdays = Math.floor(diff / (1000 * 60 * 60 * 24)),
+                            thours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                            tminutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+                            tseconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                        // Keep 2 digits
+                        ctx.days = (tdays < 10) ? '0' + tdays : tdays;
+                        ctx.hours = (thours < 10) ? '0' + thours : thours;
+                        ctx.minutes = (tminutes < 10) ? '0' + tminutes : tminutes;
+                        ctx.seconds = (tseconds < 10) ? '0' + tseconds : tseconds;
+
+                        //1542027577442
+                        // Check for time expiration
+                        if (diff < 0) {
+                            clearInterval(x);
+                            ctx.expired = true;
+                            app.$destroy();
+                        }
+                    }, 1000);
+
+                    // Return data
+                    return {
+                        days: ctx.days,
+                        hours: ctx.hours,
+                        minutes: ctx.minutes,
+                        seconds: ctx.seconds
+                    };
+                }
+            },
+            methods: {
+
+            },
+            destroyed: function () {
+                app1.FinTest();
+            }
+        });
+
+        /**************************
+          ROOT COMPONENT
+         **************************/
+        var app = new Vue({
+            el: '#appcountdown'
+        });
+    </script>
+
+    <script>
+        Vue.component('paginated-list', {
+            data: function data() {
+            return {
+            pageNumber: @page };
+            },
+            props: {
+                listData: {
+                    type: Array,
+                    required: true
+                },
+                size: {
+                    type: Number,
+                    required: false,
+                    default: 1
+                },
+                thisTextAnswer: {
+                    type: String,
+                    required: false,
+                    default: "!"
+                },
+            },
+            methods: {
+                nextPage: function nextPage() {
+                    this.pageNumber++;
+                    this.SavePage(this.pageNumber);
+                },
+                prevPage: function prevPage() {
+                    this.pageNumber--;
+                    this.SavePage(this.pageNumber);
+                },
+                EndTest: function () {
+                    //var isconfirm = confirm("Вы ответили на все вопросы и желаете завершить тестирование?");
+                    if (confirm("Вы ответили на все вопросы и желаете завершить тестирование?")) {
+                        app1.FinTest();
+                    }
+                },
+                SavePage: function (page) {
+                    axios.post('/AJAX/SaveProgress/', { id: this.paginatedData[0].testsId, progress: page}, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    }).then(response => {
+                    }).catch(error => {
+                        alert('Error');
+                    });
+                },
+                SaveResult: function (id, idAnswer, index, q) {
+                    mApp.blockPage('.page-content');
+                    //alert(index);
+                    var select_val = app1.people[index].answersSelected;
+
+                    var arrSelectVal = JSON.parse(JSON.stringify(select_val));
+                    console.log(arrSelectVal);
+                    axios.post('/AJAX/SaveResult/', { id: id, idAnswer: idAnswer, index: index + 1, AnswersList: arrSelectVal, qId: q }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+                    mApp.unblockPage('.page-content');
+                }).catch(error => {
+                    alert('Error');
+                    mApp.unblockPage('.page-content');
+                });
+                },
+                SaveResultSingle: function (id, idAnswer, index, qId) {
+                    mApp.blockPage('.page-content');
+                    //alert(qId);
+                    axios.post('/AJAX/SaveResultSingle/', { id: id, idAnswer: idAnswer, index: index + 1, idQuestion: qId}, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    }).then(response => {
+                        mApp.unblockPage('.page-content');
+                    }).catch(error => {
+                        alert('Error');
+                        mApp.unblockPage('.page-content');
+                    });
+                },
+                SaveText: function (id, idAnswer, index, qId) {
+                    mApp.blockPage('.page-content');
+                    var text = this.listData[index].textAnswer;
+                    //alert(text);
+                    //console.log(this.listData[index].textAnswer);
+                    axios.post('/AJAX/SaveText/', { id: id, text: text, index: index, idQuestion: qId }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    }).then(response => {
+                        alert(response.data);
+                        mApp.unblockPage('.page-content');
+                    }).catch(error => {
+                        alert('Error');
+                        mApp.unblockPage('.page-content');
+                    });
+                },
+                SaveSubAnswer: function (index, testId, qId, AnswerId) {
+                    mApp.blockPage('.page-content');
+                    //alert(AnswerId);
+                    axios.post('/AJAX/SaveSubAnswer/', { page: index, testId: testId, qId: qId, AnswerId: AnswerId }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    }).then(response => {
+                        alert(response.data);
+                        mApp.unblockPage('.page-content');
+                    }).catch(error => {
+                        alert('Error');
+                        mApp.unblockPage('.page-content');
+                    });
+                },
+                Next: function (id, idAnswer) {
+                  $('input[name="correctAnswer"]').attr('checked', false);
+                },
+            },
+            computed: {
+                pageCount: function pageCount() {
+                    var l = this.listData.length,
+                    s = this.size;
+                    return Math.floor(l / s);
+                },
+                paginatedData: function paginatedData() {
+                    var start = this.pageNumber * this.size,
+                    end = start + this.size;
+                    return this.listData.
+                    slice(start, end);
+                },
+                charCount: function charCount() {
+                    var a = this.listData[this.pageNumber].textAnswer.length;
+                    //alert(this.listData[this.pageNumber].textAnswer.length);
+                    return a;
+                }
+            },
+            mounted: function () {
+
+            },
+
+        template: `<div>
+               <ul>
+                  <li v-for="(p, index) in paginatedData">
+                    <h3>{{p.name}}</h3>
+                    <table class="table" style="width:10%;">
+                        <tbody>
+                            <tr>
+                                <td style="vertical-align: middle; text-align: left;"><h5>Темы:</h5></td>
+                                <td style="vertical-align: middle; text-align: left;" ><span  v-for="s in p.subjects" class="badge badge-info">{{s.NameRu}} </span>&nbsp; </td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle; text-align: left;"><h5>Уровень:</h5></td>
+                                <td style="vertical-align: middle; text-align: left;"  ><span v-for="l in p.levels" class="badge badge-info">-{{l.NameRu}}-</span> </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <span>Тип вопроса: {{p.typeName}}</span><br><br>
+                    <b>{{p.number}}. {{p.question.QuestionRu}}</b><br /> <br />
+                    <div style=""  v-for="(pic, indexP) in p.pictureList">
+                        <a v-bind:href="'/images?id='+p" target="_blank" style="">
+                            <img  style="max-height:1000px; max-width:100%; display: block;" v-bind:src="'/images?id='+pic" />
+                        </a>
+                        <br /> <br />
+                    </div>
+
+                        <table class="table" border="0">
+                        <tbody>
+                        <tr  v-if="p.typeId != 105 && p.typeId != 13" v-for="(a, indexA) in p.answers">
+                            <td width="10%">
+                                <input  v-model="p.answerSingle"  v-if="p.typeId == 11 || p.typeId == 12" v-on:click="SaveResultSingle(p.testsId, a.AnswerId, index, p.question.QuestionId)" name="dzen" type="radio" v-bind:value="a">
+                                <input id="multiAnswers"  v-model="p.answersSelected"  v-if="p.typeId == 53" v-on:click="SaveResult(p.testsId, a.AnswerId, pageNumber, p.question.QuestionId)" name="multiAnswers" type="checkbox" v-bind:value="a">
+                            </td>
+                            <td width="90%">
+                             <span><b> {{p.alphabet[indexA]}}</b>.</span>  <span> {{a.AnswerRu}}</span>
+                            </td>
+                        </tr>
+                        <tr v-if="p.typeId == 105" v-for="(a, indexA) in p.answers">
+                            <td v-if="indexA < 1"><textarea id="TextAnswer"  v-on:change="SaveText(p.testsId, a.AnswerId, pageNumber, p.question.QuestionId)" maxlength="1500" v-model.lazy="p.textAnswer" v-bind:value="p.textAnswer"  data-index="p.typeId" cols="100" maxlengt="1500" rows="5"  v-if="p.typeId == 105"  name="TextAnswer" type="textarea" ></textarea>
+                            <button>Сохранить</button></br>
+                            </td>
+                            <td align="left" v-if="indexA < 1"></td>
+                        </tr>
+                        <tr v-if="p.typeId == 13" v-for="(sub, indexSub) in p.subquestion">
+                            <td >
+                                <span>{{sub.Question.QuestionRu}}</span>
+                            </td>
+                            <td > 
+                                <div class="kt-radio-list" v-for="(sa, indexSA) in p.subAnswers">
+							        <label class="kt-radio">
+								        <input v-bind:id="sub.Question.QuestionId +'a'" v-model="sub.SubAnswers.AnswerId"  v-on:change="SaveSubAnswer(index, p.testsId, sub.Question.QuestionId, sa.AnswerId)"  v-bind:name="sub.Question.QuestionId+'a'" type="radio" > {{sa.AnswerRu}}
+								        <span></span>
+							        </label>
+						        </div>                             
+                            </td>
+                        </tr>
+                        </tbody>
+                        </table>
+
+                  </li>
+               </ul>
+              <button style=""
+                  :disabled="pageNumber === 0"
+                  v-on:click="prevPage">
+                  Предыдущий вопрос
+              </button>
+              <button
+                  :disabled="pageNumber >= pageCount -1"
+                   v-on:click="nextPage">
+                  Следующий вопрос
+              </button>
+              <button v-on:click="EndTest">Завершить тест</button>
+              {{pageNumber + 1}} вопрос из {{pageCount}}
+             </div>
+  `
+        });
+
+        function createData() {
+            var length = @Html.Raw(Json.Encode(Model.Count()));
+            var viewPassTests = @Html.Raw(Json.Encode(Model));
+            var checkSession = sessionStorage.getItem("BlockSession");
+            var data = [];
+            var alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J','K', 'L', 'M', 'N', 'O','P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+            for (var i = 0; i < length; i++) {
+                data.push({
+                    number : i+1,
+                    name: viewPassTests[i].NameRu,
+                    answers: viewPassTests[i].Answers,
+                    answersSelected: viewPassTests[i].AnswersSelected,
+                    answerSingle: viewPassTests[i].AnswerSingle,
+                    question: viewPassTests[i].Question,
+                    typeName: viewPassTests[i].TypeName,
+                    typeId: viewPassTests[i].TypeId,
+                    testsId: viewPassTests[i].TestsId,
+                    subjects: viewPassTests[i].Tree,
+                    levels: viewPassTests[i].LevelsList,
+                    pictureList: viewPassTests[i].PictureList,
+                    textAnswer: viewPassTests[i].TextAnswer,
+                    subquestion: viewPassTests[i].SubQuestion,
+                    subAnswers: viewPassTests[i].SubAnswers,
+                    viewPassTests: viewPassTests,
+                    alphabet: alphabet,
+                });
+            }
+            return data;
+        }
+
+    var app1 = new Vue({
+        el: '#apptest',
+        data: {
+            people: createData(),
+        },
+        methods: {
+            FinTest: function () {
+                app1.$destroy();
+            },
+            SaveProgress: function () {
+                axios.post('/AJAX/SaveProgress/', { id: this.people[0].testsId, progress: progress}, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+
+                }).catch(error => {
+                    alert('Error');
+                });
+            },
+        },
+        destroyed: function () {
+            mApp.blockPage('.page-content');
+            $.get("/TTS/FinTest", { testId: this.people[0].testsId})
+                .done(function (data) {
+                    $("#apptest").html(data);
+                    mApp.unblockPage('.page-content');
+                });
+        },
+        created: function () {
+            axios.post('/AJAX/ChekFIn/', { id: this.people[0].testsId }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then(response => {
+                //alert(response.data);
+                if (response.data == 1) {
+                    app.$destroy();
+                    app1.$destroy();
+                    $("#apptest").html("<b>Тест завершен!</b>");
+                 }
+            }).catch(error => {
+                alert('Error');
+            });
+
+
+        }
+    });
+
+    </script>﻿
+}
+
+<style>
+    #app {
+        width: 80%;
+        margin: auto;
+    }
+
+    ul {
+        padding: 4px 4px;
+        border: 1px solid black;
+    }
+
+    li {
+        list-style-type: none;
+        padding: 4px 4px;
+    }
+
+
+        li:nth-child(2n) {
+            background-color: #ddd;
+        }
+
+            li:nth-child(2n):hover {
+                background-color: #ccc;
+            }
+
+
+    button:hover {
+        cursor: pointer;
+    }
+
+        button:hover:disabled {
+            cursor: not-allowed;
+        }
+</style>
+

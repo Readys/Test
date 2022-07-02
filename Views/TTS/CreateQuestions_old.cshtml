@@ -1,0 +1,422 @@
+﻿@model  List<TTS.Models.ViewQuestion>
+@using TTS.Models;
+@{
+
+    ViewBag.Title = "Home Page";
+    var tree = (List<Tree>)ViewBag.Tree;
+
+}
+<br />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<br />
+<br />
+
+<div id="app-4" data-equalizer>
+
+    <ol>
+        <li v-for="(question, index) in  questions">
+            <div v-if="question.PictureList.length>0" v-for="(p, indexP) in question.PictureList">
+                <img style="height: 200px; display: block;" v-bind:src="'/images?id='+p" />
+                <button v-on:click="removeFile(index, p, indexP)" class="btn btn-danger">Удалить картинку</button>
+            </div>
+            <div v-if="question.isEdit">
+                <label>Поле для вопроса</label>
+                <b><textarea style="min-width:95%" v-model="question.Question.QuestionRu" v-bind:value="question.Question.QuestionRu"></textarea></b>
+                <button v-on:click="enableQuestionEdit(index)" class="btn-info">ok</button>
+            </div>
+            <div v-on:click="enableQuestionEdit(index)" v-else>
+                {{question.Question.QuestionRu}}
+            </div>
+            <div>
+                <label>Выберите тип вопроса</label>
+                <select v-on:change="saveTypeId(index)" id="type" v-model="question.Question.TypeId">
+                    <option v-for="option in questionType" v-bind:value="option.TreeId">
+                        {{ option.NameRu }}
+                    </option>
+                </select>
+            </div>
+            <div>
+                <label>Выберите уровень механика</label>
+                <select v-on:change="saveLevel(index)" v-model="question.Question.LevelId">
+                    <option v-for="option in questionLevel" v-bind:value="option.TreeId">
+                        {{option.NameRu}}
+                    </option>
+                </select>
+            </div>
+            <div class="row col-md-10">
+                <div>
+                    <label class="typo_label">Tagging</label>
+                    <multiselect v-model="question.DepartmentList" tag-placeholder="Add this as new tag" placeholder="Search or add a tag" label="NameRu" track-by="TreeId" :options="questionDep" :multiple="true" :taggable="true" @@tag="addTag"></multiselect>
+                   
+                </div>
+                <label>Выберите дивизион компании</label>
+                <select data-type="2" v-bind:data-index="index" v-model="question.DepartmentList" style="width:100%" class="js-example-basic-multiple division" name="states[]" multiple="multiple">
+                    <option v-for="option in questionDep" v-bind:value="option.TreeId">
+                        {{option.NameRu}}
+                    </option>
+                </select>
+            </div>
+            <br />
+            <div class="row col-md-10">
+                Тема вопроса
+                <select v-model="question.CategoryList" data-type="1" v-bind:data-index="index" style="width:100%" class="js-example-basic-multiple" name="states[]" multiple="multiple">
+                    <option v-for="option in questionSubject" v-bind:value="option.TreeId">
+                        {{option.NameRu}}
+                    </option>
+                </select>
+            </div>
+            <div>
+                <a href="/Tree" target="_blank">Добавить категорию</a>
+            </div>
+            <br />
+            <button class="btn btn-warning" v-on:click="uploadFile(index)">
+                Прикрепить картинку или файл
+            </button>
+            <div><br /><label>Варианты ответов</label> </div>
+            <table class="table">
+                <tbody>
+                    <tr v-for="(answer, indexA) in question.Answers">
+
+                        <td style="width:100%">
+
+                            <div v-if="answer.isEdit"><textarea rows="1" class="form-control" style="min-width: 100%" v-model="answer.AnswerRu" v-bind:value="answer.AnswerRu" ></textarea></div>
+                            <div v-else>
+                                {{answer.AnswerRu}}
+                            </div>
+                        </td>
+                        <td>
+                            <div v-if="answer.isEdit"> <input v-model="answer.Weight" v-bind:value="answer.Weight" /></div>
+                            <div v-else>
+                                {{answer.Weight}}
+                            </div>
+                        </td>
+                        <td>
+                            <button v-on:click="enableAnswerEdit(index, indexA)" id="AnswerEditBtn" class="btn btn-default"><span v-if="answer.isEdit">Сохранить</span><span v-else>Редактировать</span></button>
+                            <button v-on:click="removeAnswer(index, indexA)" class="btn btn-danger">Удалить</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td colspan="2">
+                            <button class="btn btn-success pull-right" v-on:click="addAnswer(index)">+ Ответ</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="info">
+                <button class="btn btn-danger pull-left" v-on:click="removeQuestion(index)">Удалить вопрос</button>
+            </div>
+            <br /><br /><br /><br />
+        </li>
+
+
+    </ol>  <div class="info">
+        <button class="btn btn-success" v-on:click="addQuestion()"> + Вопрос</button>
+    </div>
+   
+
+</div>
+
+
+
+<div id="UploadModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Загрузка файла</h4>
+            </div>
+            <div class="modal-body">
+
+                <input type="hidden" id="index" />
+                <form action="/AJAX/SaveUploadedFile"
+                      class="dropzone"
+                      id="my-awesome-dropzone">
+                    <input type="hidden" name="partId" id="partId" />
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+   
+</div>
+
+@section Scripts
+{
+    <script src="~/Plugins/Dropzone/min/dropzone.min.js"></script>
+    <script src="~/Scripts/vue.js"></script>
+    <script src="~/Scripts/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+    <script src="https://unpkg.com/vue-multiselect@2.1.0"></script>
+   
+    <script type="text/javascript">
+
+
+        var app4 = new Vue({
+            el: '#app-4',
+            components: {
+                Multiselect: window.VueMultiselect.default
+            },
+            data: {              
+                questions: @Html.Raw(Json.Encode(Model)),
+                questionType: @Html.Raw(Json.Encode(tree.Where(w=> w.TypeId == 4))),
+                questionDep: @Html.Raw(Json.Encode(tree.Where(w => w.TypeId == 2))),
+                questionLevel: @Html.Raw(Json.Encode(tree.Where(w => w.TypeId == 3))),
+                questionSubject: @Html.Raw(Json.Encode(tree.Where(w => w.TypeId == 1))),
+            },
+            methods: {
+                addTag(newTag) {
+                    alert(777);
+                    const tag = {
+                        name: newTag,
+                        code: newTag.substring(0, 2) + Math.floor((Math.random() * 10000000))
+                    }
+                    this.options.push(tag)
+                    this.value.push(tag)
+                },
+                addQuestion: function () {
+                    axios.post('/AJAX/AddQuestion/', {QuestionRu: "Новый вопрос"}, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    }).then(response => {
+                        app4.questions.push({
+                            Question: { "QuestionId": response.data, "QuestionRu": "Новый вопрос" }, Answers: [], DepartmentList: [], CategoryList: [], isEdit: false
+                        });
+                    }).catch(error => {
+                        alert('Error')
+                    });
+
+                },
+
+                removeQuestion: function (index) {
+                    var qId = this.questions[index].Question.QuestionId;
+                    axios.post('/AJAX/DeleteQuestion/', { id: qId }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                    }).then(response => {
+                        alert(qId + " " + index);
+                            this.questions[index].splice(index, 1);
+                        }).catch(error => {
+                            alert('Error');
+                            alert(qId + " " + index);
+                        });
+                },
+                addAnswer: function (index) {
+                    var qId = this.questions[index].Question.QuestionId;
+                    axios.post('/AJAX/AddAnswer/', { id: qId , AnswerRu: "Новый ответ" }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    }).then(response => {
+                        //alert(response.data + " " + qId);
+                        this.questions[index].Answers.push({
+                            AnswerId: response.data, QuestionId: qId, Weight: 0, AnswerRu: 'Новый ответ',  isEdit: false
+                        });
+
+                    //    alert(this.questions[index].Question.Answers[indexA].AnswerRu);
+                    }).catch(error => {
+                        alert('Error')
+                    });
+
+                },
+
+                enableQuestionEdit: function (index) {
+                    if (this.questions[index].isEdit) {
+                        this.questions[index].isEdit = false;
+                        //alert(this.questions[index].Question.QuestionId)
+                        axios.post('/AJAX/EditQuestion/', { id: this.questions[index].Question.QuestionId, QuestionRu: this.questions[index].Question.QuestionRu }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        }).then(response => {
+
+                        }).catch(error => {
+                            alert('Error')
+                        });
+
+                    } else {
+                        this.questions[index].isEdit = true;
+                    }
+
+                },
+                enableAnswerEdit: function (indexQ, indexA) {
+                    
+                    if (this.questions[indexQ].Answers[indexA].isEdit == true) {
+                        //alert("Ku");
+                        this.questions[indexQ].Answers[indexA].isEdit = false;
+                        axios.post('/AJAX/EditAnswer/', { id: this.questions[indexQ].Answers[indexA].AnswerId, AnswerRu: this.questions[indexQ].Answers[indexA].AnswerRu, Weight: this.questions[indexQ].Answers[indexA].Weight }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        }).then(response => {
+
+                        }).catch(error => {
+                            alert('Error')
+                        });
+                    } else {
+
+                        this.questions[indexQ].Answers[indexA].isEdit = true;
+
+                    }
+                },
+                removeAnswer: function (indexQ, indexA) {
+                        axios.post('/AJAX/DeleteAnswer/', { id: this.questions[indexQ].Answers[indexA].AnswerId }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        }).then(response => {
+                            this.questions[indexQ].Answers.splice(indexA, 1);
+                        }).catch(error => {
+                            alert('Error')
+                        });
+                },
+                saveTypeId: function (index) {
+                    axios.post('/AJAX/EditType/', {id: this.questions[index].Question.QuestionId,
+                        TypeId: this.questions[index].Question.TypeId
+                    });
+                },
+                saveLevel: function(index) {
+                    axios.post('/AJAX/EditLevel/', {id: this.questions[index].Question.QuestionId,
+                        LevelId: this.questions[index].Question.LevelId,
+                    });
+                },
+                saveTree: function (type, select_val, index) {
+
+                    if (arrSelectVal.length > 0) {
+                    //alert();
+                        axios.post('/AJAX/UpdateCategory', { id: this.questions[index].Question.QuestionId, CategoryList: select_val, TypeId: type}, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        }).then(response => {
+
+                        }).catch(error => {
+                            alert('Error')
+                                });
+                    }
+                },
+
+                uploadFile: function (index) {
+                    $("#partId").val(this.questions[index].Question.QuestionId);
+
+                    $("#index").val(index);
+                    //this.questions[index].QuestionId;
+                    //alert(this.questions[index].Question.QuestionId);
+                    $('#UploadModal').modal('show');
+                },
+                removeFile: function (index, p, indexP) {
+                    axios.post('/Images/RemoveFile', { id: p }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    }).then(response => {
+                        this.questions[index].PictureList.splice(indexP, 1);
+                    }).catch(error => {
+                        alert('Error')
+                    });
+                },
+                removePicture: function (index, p, indexP) {
+                    axios.delete('/api/Test/'+1, { id: p }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    }).then(response => {
+                        this.questions[index].PictureList.splice(indexP, 1);
+                    }).catch(error => {
+                        alert('Error')
+                    });
+                },
+
+            },
+            updated: function () {
+              // $('.js-example-basic-multiple').select2();
+            },
+            beforeMount: function () {
+                //$("#type[1]").prop('selected', true);
+               // $("#type").hide();
+            }
+        });
+
+        $('.js-example-basic-multiple').on("change", function (e) {
+            var selected_element = $(e.currentTarget);
+            var select_val = selected_element.val();
+
+            alert(arrSelectVal);
+
+            var type = selected_element.data("type");
+            var index = selected_element.data("index");
+
+
+            arrSelectVal = JSON.parse("[" + select_val + "]");
+        
+
+          // if (type == 2) {
+          //     app4.questions[index].CategoryList = arrSelectVal;
+          // }
+          // if (type == 1) {
+          //     app4.questions[index].DepartmentList = arrSelectVal;
+          // }
+
+
+            if (arrSelectVal.length > 0) { app4.saveTree(type, arrSelectVal, index);}
+
+        });
+
+        var vm = new Vue({
+            el: '#UploadModal',
+            data: {
+                labels:@Html.Raw(Json.Encode(Model)) ,
+                nextBarId: 2
+            },
+            computed: {
+
+            },
+            methods: {
+                saveFile: function () {
+                    this.labels[$("#index").val()].isDownloadButton = $("#partId").val();
+                },
+            }
+        });
+
+
+    //    $('.js-example-basic-multiple').on('select2:selecting', function (e) {
+    //        alert('Selecting: ', e.data);
+    //    });
+//
+//  $(document.body).on("change", '.js-example-basic-multiple', function () {
+//      alert(this.value);
+//  });
+
+        //File Upload response from the server
+        Dropzone.options.myAwesomeDropzone = {
+            init: function () {
+                this.on("complete", function (data) {
+                    var res = JSON.parse(data.xhr.responseText);
+                    //vm.saveFile();
+                    var index = $("#index").val();
+
+                    app4.questions[index].PictureList.push(
+                        res.UploadId
+                    );
+                    this.removeAllFiles(true);
+                    $('#UploadModal').modal('hide');
+                });
+            }
+        };
+    </script>
+
+
+}
+
+@section Styles{
+    <link rel="stylesheet" type="text/css" href="~/Plugins/Dropzone/min/basic.min.css" />
+    <link rel="stylesheet" type="text/css" href="~/Plugins/Dropzone/min/dropzone.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/vue-multiselect@2.1.0/dist/vue-multiselect.min.css">
+
+}

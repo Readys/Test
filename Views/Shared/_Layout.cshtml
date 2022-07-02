@@ -1,0 +1,551 @@
+﻿@using TTS.Models
+@using TTS.Tools;
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- begin::Head -->
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewBag.Title</title>
+    <meta name="description" content="Blank inner page examples">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
+
+    <!--begin::Web font -->
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.16/webfont.js"></script>
+    <script>
+        WebFont.load({
+            google: { "families": ["Poppins:300,400,500,600,700", "Roboto:300,400,500,600,700", "Asap+Condensed:500"] },
+            active: function () {
+                sessionStorage.fonts = true;
+            }
+        });
+    </script>
+
+    <!--end::Web font -->
+    <!--begin:: Global Mandatory Vendors -->
+
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+
+    <link href="/Theme/vendors/perfect-scrollbar/css/perfect-scrollbar.css" rel="stylesheet" type="text/css" />
+    @RenderSection("Styles", required: false)
+    <!--end:: Global Mandatory Vendors -->
+    <!--begin:: Global Optional Vendors -->
+    <link href="/Theme/vendors/tether/dist/css/tether.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/bootstrap-datepicker/dist/css/bootstrap-datepicker3.min.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/bootstrap-datetime-picker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/bootstrap-timepicker/css/bootstrap-timepicker.min.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/bootstrap-select/dist/css/bootstrap-select.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/select2/dist/css/select2.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/nouislider/distribute/nouislider.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/owl.carousel/dist/assets/owl.carousel.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/owl.carousel/dist/assets/owl.theme.default.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/ion-rangeslider/css/ion.rangeSlider.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/ion-rangeslider/css/ion.rangeSlider.skinFlat.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/dropzone/dist/dropzone.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/summernote/dist/summernote.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/bootstrap-markdown/css/bootstrap-markdown.min.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/animate.css/animate.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/toastr/build/toastr.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/jstree/dist/themes/default/style.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/morris.js/morris.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/chartist/dist/chartist.min.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/sweetalert2/dist/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/socicon/css/socicon.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/vendors/line-awesome/css/line-awesome.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/vendors/flaticon/css/flaticon.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/vendors/metronic/css/styles.css" rel="stylesheet" type="text/css" />
+    <link href="/Theme/vendors/vendors/fontawesome5/css/all.min.css" rel="stylesheet" type="text/css" />
+
+    <!--end:: Global Optional Vendors -->
+    <!--begin::Global Theme Styles -->
+    <link href="/Theme/assets/demo/base/style.bundle.css" rel="stylesheet" type="text/css" />
+
+    <!--RTL version:<link href="/Theme/assets/demo/base/style.bundle.rtl.css" rel="stylesheet" type="text/css" />-->
+    <!--end::Global Theme Styles -->
+    <link rel="shortcut icon" href="/Theme/assets/demo8/demo/media/img/logo/favicon.ico" />
+
+    <style>
+
+        body {
+            font-family: Arial !important;
+        }
+
+        html {
+            font-family: Arial !important;
+        }
+
+        
+        .m-header-menu .m-menu__nav > .m-menu__item.m-menu__item--tabs > .m-menu__link .m-menu__link-text {
+            font-family: Arial;
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: #feba10;
+            text-transform: uppercase;
+        }
+
+        .m-header-menu .m-menu__nav > .m-menu__item.m-menu__item--tabs > .m-menu__link .m-menu__link-icon {
+            font-size: 1.1rem;
+            color: #feba10;
+        }
+
+        .m-header-menu .m-menu__nav > .m-menu__item.m-menu__item--tabs > .m-menu__link:hover .m-menu__link-text {
+            color: #aaa;
+        }
+
+        .m-header-menu .m-menu__nav > .m-menu__item.m-menu__item--tabs > .m-menu__link:hover .m-menu__link-icon {
+            color: #feba10;
+        }
+
+        .m-menu__link-text {
+            font-weight: 600 !important;
+            font-size: 1.4rem;
+        }
+
+
+        .btn-focus {
+            color: #000;
+            background-color: #feba10;
+            border-color: #feba10;
+        }
+
+            .btn-focus:hover {
+                color: #777;
+                background-color: #840ad9;
+                border-color: #7c0acd;
+            }
+
+            .btn-focus:focus, .btn-focus.focus {
+                -webkit-box-shadow: 0 0 0 0.2rem rgba(232, 205, 0, 0.5);
+                box-shadow: 0 0 0 0.2rem rgba(232, 205, 0, 0.5);
+            }
+
+            .btn-focus.disabled, .btn-focus:disabled {
+                color: #000;
+                background-color: #feba10;
+                border-color: #feba10;
+            }
+
+            .btn-focus:not(:disabled):not(.disabled):active, .btn-focus:not(:disabled):not(.disabled).active,
+            .show > .btn-focus.dropdown-toggle {
+                color: #fff;
+                background-color: #7c0acd;
+                border-color: #7509c1;
+            }
+
+                .btn-focus:not(:disabled):not(.disabled):active:focus, .btn-focus:not(:disabled):not(.disabled).active:focus,
+                .show > .btn-focus.dropdown-toggle:focus {
+                    -webkit-box-shadow: 0 0 0 0.2rem rgba(232, 205, 0, 0.5);
+                    box-shadow: 0 0 0 0.2rem rgba(232, 205, 0, 0.5);
+                }
+
+        .btn-outline-focus {
+            color: #feba10;
+            background-color: transparent;
+            background-image: none;
+            border-color: #feba10;
+        }
+
+            .btn-outline-focus:hover {
+                color: #000;
+                background-color: #feba10;
+                border-color: #feba10;
+            }
+
+            .btn-outline-focus:focus, .btn-outline-focus.focus {
+                -webkit-box-shadow: 0 0 0 0.2rem rgba(232, 205, 0, 0.5);
+                box-shadow: 0 0 0 0.2rem rgba(232, 205, 0, 0.5);
+            }
+
+            .btn-outline-focus.disabled, .btn-outline-focus:disabled {
+                color: #feba10;
+                background-color: transparent;
+            }
+
+            .btn-outline-focus:not(:disabled):not(.disabled):active, .btn-outline-focus:not(:disabled):not(.disabled).active,
+            .show > .btn-outline-focus.dropdown-toggle {
+                color: #000;
+                background-color: #feba10;
+                border-color: #feba10;
+            }
+
+                .btn-outline-focus:not(:disabled):not(.disabled):active:focus, .btn-outline-focus:not(:disabled):not(.disabled).active:focus,
+                .show > .btn-outline-focus.dropdown-toggle:focus {
+                    -webkit-box-shadow: 0 0 0 0.2rem rgba(232, 205, 0, 0.5);
+                    box-shadow: 0 0 0 0.2rem rgba(232, 205, 0, 0.5);
+                }
+
+
+
+        html {
+            font-family: Roboto !important;
+        }
+
+        body {
+            font-family: Roboto !important;
+        }
+    </style>
+
+    @{
+        HRMEntities h_db = new TTS.Models.HRMEntities();
+        TTSEntities db = new TTS.Models.TTSEntities();
+        //User appUser = h_db.User.Where(x => x.Fired != true).SingleOrDefault(x => x.AccountAD.ToLower() == User.Identity.Name.ToLower());
+        L_User appUser = Helper.GetAppUser(User.Identity);
+        var config = System.Configuration.ConfigurationManager.GetSection("CompanyInfo") as System.Collections.Specialized.NameValueCollection;
+        //List<Branch> branches = db.Branch.ToList(); // возможность выбирать филиал при формировании табеля учета рабочего времени
+    }
+</head>
+
+<!-- end::Head -->
+<!-- begin::Body -->
+<body style="background-image: url(/Theme/assets/app/media/img/bg/bg-9.jpg);" class="m-page--fluid m-header--fixed m-header--fixed-mobile m-aside-left--enabled m-aside-left--offcanvas m-footer--push m-aside--offcanvas-default ">
+
+    <!-- begin:: Page -->
+    <div class="m-grid m-grid--hor m-grid--root m-page">
+
+        <!-- begin::Header -->
+        <header id="m_header" class="m-grid__item		m-header " m-minimize="minimize" m-minimize-mobile="minimize" m-minimize-offset="10" m-minimize-mobile-offset="10">
+            <div class="m-header__top">
+                <div class="m-container m-container--fluid m-container--full-height m-page__container" style="background-color:black;">
+                    <div class="m-stack m-stack--ver m-stack--desktop">
+
+                        <!-- begin::Brand -->
+                        <div class="m-stack__item m-brand m-stack__item--left">
+                            <div class="m-stack m-stack--ver m-stack--general m-stack--inline">
+                                <div class="m-stack__item m-stack__item--middle m-brand__logo">
+                                    <a href="/" class="m-brand__logo-wrapper">
+                                        <img alt="" src="/Theme/assets/demo/media/img/logo/logo2.png" class="m-brand__logo-default" />
+                                        <img alt="" src="/Theme/assets/demo/media/img/logo/logo2.png" class="m-brand__logo-inverse" />
+                                    </a>
+
+                                </div>
+                                <div class="m-stack__item m-stack__item--middle m-brand__tools">
+
+                                    <!-- BEGIN: Responsive Aside Left Menu Toggler -->
+                                    <a href="javascript:;" id="m_aside_left_offcanvas_toggle" class="m-brand__icon m-brand__toggler m-brand__toggler--left m--visible-tablet-and-mobile-inline-block">
+                                        <span></span>
+                                    </a>
+
+                                    <!-- END -->
+                                    <!-- begin::Responsive Header Menu Toggler-->
+                                    <a id="m_aside_header_menu_mobile_toggle" href="javascript:;" class="m-brand__icon m-brand__toggler m--visible-tablet-and-mobile-inline-block">
+                                        <span></span>
+                                    </a>
+
+                                    <!-- end::Responsive Header Menu Toggler-->
+                                    <!-- begin::Topbar Toggler-->
+                                    <a id="m_aside_header_topbar_mobile_toggle" href="javascript:;" class="m-brand__icon m--visible-tablet-and-mobile-inline-block">
+                                        <i class="flaticon-more"></i>
+                                    </a>
+
+                                    <!--end::Topbar Toggler-->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- end::Brand -->
+                        <!-- begin::Topbar -->
+                        <!-- end::Topbar -->
+                    </div>
+                </div>
+            </div>
+            <div class="m-header__bottom">
+                <div class="m-container m-container--fluid m-container--full-height m-page__container">
+                    <div class="m-stack m-stack--ver m-stack--desktop">
+
+                        <!-- begin::Horizontal Menu -->
+                        <div class="m-stack__item m-stack__item--fluid m-header-menu-wrapper">
+                            <button class="m-aside-header-menu-mobile-close  m-aside-header-menu-mobile-close--skin-light " id="m_aside_header_menu_mobile_close_btn"><i class="la la-close"></i></button>
+                            <div id="m_header_menu" class="m-header-menu m-aside-header-menu-mobile m-aside-header-menu-mobile--offcanvas  m-header-menu--skin-dark m-header-menu--submenu-skin-light m-aside-header-menu-mobile--skin-light m-aside-header-menu-mobile--submenu-skin-light ">
+                                <ul class="m-menu__nav  m-menu__nav--submenu-arrow ">
+                                    @{
+                                        string controllerName = ViewContext.RouteData.Values["controller"].ToString();
+                                        string actionName = ViewContext.RouteData.Values["action"].ToString();
+
+                                        if (appUser != null)
+                                        {
+                                            List<UserInRole> access = db.UserInRole.Where(x => x.UserId == appUser.UserId).ToList();
+                                            List<Attestation> atts = db.Attestations.ToList();
+                                            var LMUserCheck = atts.Where(x => x.LMUserId == appUser.UserId).ToList();
+                                            int cnt = LMUserCheck.Count();
+                                            if (!String.IsNullOrEmpty(appUser.AccountAD))
+                                            {
+
+                                                <li class="m-menu__item  @if ((actionName == "Index" && controllerName == "Home" ) || actionName == "CreateCertification" ||  
+                                                    actionName == "CreateCertificationOut" || actionName == "Marks" || (actionName == "Index" && controllerName == "TTS") )
+                                            { <text> m-menu__item--active  m-menu__item--active-tab </text> }    m-menu__item--submenu m-menu__item--tabs" m-menu-submenu-toggle="tab" aria-haspopup="true">
+                                                    <a href="/" onclick="window.location='/'" class="m-menu__link m-menu__toggle">
+                                                        <span class="m-menu__link-text">Аттестации</span><i class="m-menu__hor-arrow la la-angle-down"></i><i class="m-menu__ver-arrow la la-angle-right"></i>
+                                                    </a>
+                                                    <div class="m-menu__submenu m-menu__submenu--classic m-menu__submenu--left m-menu__submenu--tabs">
+                                                        <span class="m-menu__arrow m-menu__arrow--adjust"></span>
+                                                        <ul class="m-menu__subnav">
+                                                            @if (access.Any())
+                                                            {
+                                                                <li class="m-menu__item    m-menu__item--submenu m-menu__item--rel m-menu__item--submenu-tabs" m-menu-submenu-toggle="click" aria-haspopup="true">
+                                                                    <a href="javascript:;" class="m-menu__link m-menu__toggle" title="Non functional dummy link">
+                                                                        <i class="m-menu__link-icon flaticon-add"></i><span class="m-menu__link-text">Назначить аттестацию</span><i class="m-menu__hor-arrow la la-angle-down"></i><i class="m-menu__ver-arrow la la-angle-right"></i>
+                                                                    </a>
+                                                                    <div class="m-menu__submenu m-menu__submenu--classic m-menu__submenu--left">
+                                                                        <span class="m-menu__arrow m-menu__arrow--adjust"></span>
+                                                                        <ul class="m-menu__subnav">
+                                                                            <li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a href="/TTS/CreateCertification?id=0" class="m-menu__link "><i class="m-menu__link-icon flaticon-users"></i><span class="m-menu__link-text">Назначить аттестацию сотрудникам компании</span></a></li>
+                                                                            <li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a href="/TTS/CreateCertificationOut?id=0" class="m-menu__link "><i class="m-menu__link-icon flaticon-users"></i><span class="m-menu__link-text">Назначить аттестацию заказчику или кандидату</span></a></li>
+                                                                        </ul>
+                                                                    </div>
+                                                                </li>
+                                                            }
+                                                            @if (access.Any())
+                                                            {
+                                                                <li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a href="/TTS/" class="m-menu__link "><i class="m-menu__link-icon flaticon-tabs"></i><span class="m-menu__link-text">Шаблоны аттестаций</span></a></li>
+                                                            }
+                                                            @if (access.Any() || cnt > 0)
+                                                            {
+                                                                <li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a href="/TTS/CertificationCalendar?tabs=0" class="m-menu__link "><i class="m-menu__link-icon flaticon-calendar"></i><span class="m-menu__link-text">Аттестации</span></a></li>
+                                                            }
+                                                            @if (access.Any() || cnt > 0)
+                                                            {
+                                                                <li class="m-menu__item " aria-haspopup="true"><a href="/Home/Marks/" class="m-menu__link "><i class="m-menu__link-icon flaticon-file"></i><span class="m-menu__link-text">Результаты аттестаций</span></a></li>
+                                                            }
+                                                            @*<li class="m-menu__item  m-menu__item--submenu m-menu__item--rel m-menu__item--more m-menu__item--submenu-tabs m-menu__item--icon-only" m-menu-submenu-toggle="click" m-menu-link-redirect="1" aria-haspopup="true">
+                                                                    <a href="javascript:;"
+                                                                       class="m-menu__link m-menu__toggle" title="Non functional dummy link"><i class="m-menu__link-icon flaticon-more-v3"></i><span class="m-menu__link-text"></span></a>
+
+                                                                </li>*@
+
+                                                        </ul>
+                                                    </div>
+                                                </li>
+                                            }
+                                            if (access.Any())
+                                            {
+                                                <li class="m-menu__item @if (ViewContext.RouteData.Values["action"].ToString() == "Questions")
+                                            { <text> m-menu__item--active  m-menu__item--active-tab </text> }     m-menu__item--submenu m-menu__item--tabs" m-menu-submenu-toggle="tab" aria-haspopup="true">
+                                                    <a href="/TTS/Questions/" onclick="window.location='/TTS/Questions/'" class="m-menu__link m-menu__toggle" title="">
+                                                        <span class="m-menu__link-text">База вопросов</span><i class="m-menu__hor-arrow la la-angle-down"></i><i class="m-menu__ver-arrow la la-angle-right"></i>
+                                                    </a>
+                                                    <div class="m-menu__submenu m-menu__submenu--classic m-menu__submenu--left m-menu__submenu--tabs">
+                                                        <span class="m-menu__arrow m-menu__arrow--adjust"></span>
+                                                        <ul class="m-menu__subnav">
+                                                            <li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a href="/TTS/Questions/" class="m-menu__link "><i class="m-menu__link-icon flaticon-questions-circular-button"></i><span class="m-menu__link-text">Все вопросы</span></a></li>
+                                                            <li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a href="/TTS/CreateQuestions?id=0" class="m-menu__link "><i class="m-menu__link-icon flaticon-questions-circular-button"></i><span class="m-menu__link-text">+ Создать вопрос</span></a></li>
+                                                            <li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a href="/Tree/Index" class="m-menu__link "><i class="m-menu__link-icon flaticon-interface-11"></i><span class="m-menu__link-text">Информация по Категориям</span></a></li>
+
+                                                        </ul>
+                                                    </div>
+                                                </li>
+                                            }
+                                            if (access.Any())
+                                            {
+                                                <li class="m-menu__item @if (ViewContext.RouteData.Values["action"].ToString() == "Index" && controllerName == "Report")
+                                            { <text> m-menu__item--active  m-menu__item--active-tab </text> }    m-menu__item--submenu m-menu__item--tabs" m-menu-submenu-toggle="tab" aria-haspopup="true">
+                                                    <a href="/Report/" onclick="window.location='/Report/'" class="m-menu__link m-menu__toggle" title="Отчеты">
+                                                        <span class="m-menu__link-text">Отчеты</span><i class="m-menu__hor-arrow la la-angle-down"></i><i class="m-menu__ver-arrow la la-angle-right"></i>
+                                                    </a>
+                                                    <div class="m-menu__submenu m-menu__submenu--classic m-menu__submenu--left m-menu__submenu--tabs">
+                                                        <span class="m-menu__arrow m-menu__arrow--adjust"></span>
+                                                        <ul class="m-menu__subnav">
+                                                            <!--<li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a href="builder.html" class="m-menu__link "><i class="m-menu__link-icon "></i><span class="m-menu__link-text">Отчет по сотрудникам</span></a></li>-->
+                                                            @* Отчет по механикам для экселя *@
+                                                            @*<li class="m-menu__item    m-menu__item--submenu m-menu__item--rel m-menu__item--submenu-tabs" m-menu-submenu-toggle="click" aria-haspopup="true">
+                                                                    <a href="/Report/MechanicReports" class="m-menu__link m-menu__toggle" title="">
+                                                                        <i class="m-menu__link-icon flaticon-add"></i><span class="m-menu__link-text">Отчёт по уровням механиков</span>
+                                                                    </a>
+                                                                </li>*@
+                                                            @*<div class="m-menu__submenu m-menu__submenu--classic m-menu__submenu--left">
+                                                                    <span class="m-menu__arrow m-menu__arrow--adjust"></span>
+                                                                    <ul class="m-menu__subnav">
+                                                                        <li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a href="" class="m-menu__link "><i class="m-menu__link-icon flaticon-users"></i><span class="m-menu__link-text">Полный отчет</span></a></li>
+                                                                        <li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a data-toggle="modal" data-target="#ShortReportModal" class="m-menu__link "><i class="m-menu__link-icon flaticon-users"></i><span class="m-menu__link-text">Краткий отчет</span></a></li>
+                                                                    </ul>
+                                                                </div>*@
+                                                            <li class="m-menu__item " aria-haspopup="true"><a href="/Report" class="m-menu__link "><i class="m-menu__link-icon flaticon-add"></i><span class="m-menu__link-text">Отчёты по аттестациям</span></a></li>
+                                                            <!--
+                                                            <li class="m-menu__item " aria-haspopup="true"><a href="inner.html" class="m-menu__link "><i class="m-menu__link-icon "></i><span class="m-menu__link-text">Отчет по уровням ПССР</span></a></li>
+                                                            <li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a href="builder.html" class="m-menu__link "><i class="m-menu__link-icon "></i><span class="m-menu__link-text">Отчет по заказчикам</span></a></li>
+                                                            <li class="m-menu__item " m-menu-link-redirect="1" aria-haspopup="true"><a href="builder.html" class="m-menu__link "><i class="m-menu__link-icon "></i><span class="m-menu__link-text">Краткий отчёт</span></a></li>
+                                                            -->
+                                                        </ul>
+                                                    </div>
+                                                </li>
+                                            }
+                                            if (access.Any())
+                                            {
+                                                <li class="m-menu__item  @if (ViewContext.RouteData.Values["action"].ToString() == "Index" && controllerName == "Trainings")
+                                            { <text> m-menu__item--active  m-menu__item--active-tab </text> }  m-menu__item--submenu m-menu__item--tabs" m-menu-submenu-toggle="tab" aria-haspopup="true">
+                                                    <a href="/Trainings/Index" onclick="window.location='/Trainings/Index'" class="m-menu__link m-menu__toggle" title="Тренинги">
+                                                        <span class="m-menu__link-text">Тренинги</span><i class="m-menu__hor-arrow la la-angle-down"></i><i class="m-menu__ver-arrow la la-angle-right"></i>
+                                                    </a>
+                                                    <div class="m-menu__submenu m-menu__submenu--classic m-menu__submenu--left m-menu__submenu--tabs">
+                                                    </div>
+                                                </li>
+                                            }
+                                        }
+                                    }
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- end::Horizontal Menu -->
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- end::Header -->
+        <!-- begin::Body -->
+        <div class="m-grid__item m-grid__item--fluid  m-grid m-grid--ver-desktop m-grid--desktop m-page__container m-body">
+            <div class="m-grid__item m-grid__item--fluid m-wrapper">
+                <!-- BEGIN: Subheader -->
+                <div class="m-subheader ">
+                    <div class="d-flex align-items-center">
+                        <div class="mr-auto">
+                            <h3 class="m-subheader__title m-subheader__title--separator">@ViewBag.Title</h3>
+                            <ul class="m-subheader__breadcrumbs m-nav m-nav--inline">
+                                <li class="m-nav__item m-nav__item--home">
+                                    <a style="font-size: 16px; font-weight:400;" href="/" class="m-nav__link m-nav__link--icon">
+                                        ГЛАВНАЯ
+                                        <i style="font-size: 24px;" class="m-nav__link-icon la la-home"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+
+                </div>
+                <span style="float:right; font-family:Arial, Helvetica, sans-serif; margin-right:3px;"><b><!--Account info--></b></span>
+                <!-- END: Subheader -->
+                <div class="m-content">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+
+        <!-- end::Body -->
+        <!-- begin::Footer -->
+        <footer class="m-grid__item m-footer ">
+            <div class="m-container m-container--fluid m-container--full-height m-page__container">
+                <div class="m-footer__wrapper">
+                    <div class="m-stack m-stack--flex-tablet-and-mobile m-stack--ver m-stack--desktop">
+                        <div class="m-stack__item m-stack__item--left m-stack__item--middle m-stack__item--last">
+                            <span class="m-footer__copyright">
+
+                            </span>
+                        </div>
+                        <div class="m-stack__item m-stack__item--right m-stack__item--middle m-stack__item--first">
+                            <ul class="m-footer__nav m-nav m-nav--inline m--pull-right">
+
+                                <li class="m-nav__item">
+                                    <a href="#" class="m-nav__link" data-toggle="m-tooltip" title="Support Center" data-placement="left">
+                                        <i class="m-nav__link-icon flaticon-info m--icon-font-size-lg3"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <!-- end::Footer -->
+    </div>
+
+    <!-- end:: Page -->
+    <!-- begin::Quick Sidebar -->
+    <!-- end::Quick Sidebar -->
+    <!-- begin::Scroll Top -->
+    <div id="m_scroll_top" class="m-scroll-top">
+        <i class="la la-arrow-up"></i>
+    </div>
+    @Html.Partial("ShortMechanicalReportModalView");
+    <!-- end::Scroll Top -->
+    <!-- begin::Quick Nav -->
+    <!-- begin::Quick Nav -->
+    <!--begin:: Global Mandatory Vendors -->
+    <script src="/Theme/vendors/jquery/dist/jquery.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/popper.js/dist/umd/popper.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/bootstrap/dist/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/js-cookie/src/js.cookie.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/moment/min/moment.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/tooltip.js/dist/umd/tooltip.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/perfect-scrollbar/dist/perfect-scrollbar.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/wnumb/wNumb.js" type="text/javascript"></script>
+
+    <!--end:: Global Mandatory Vendors -->
+    <!--begin:: Global Optional Vendors -->
+    <script src="/Theme/vendors/jquery.repeater/src/lib.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/jquery.repeater/src/jquery.input.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/jquery.repeater/src/repeater.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/jquery-form/dist/jquery.form.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/block-ui/jquery.blockUI.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/js/framework/components/plugins/forms/bootstrap-datepicker.init.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/bootstrap-timepicker/js/bootstrap-timepicker.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/js/framework/components/plugins/forms/bootstrap-timepicker.init.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/bootstrap-daterangepicker/daterangepicker.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/js/framework/components/plugins/forms/bootstrap-daterangepicker.init.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/bootstrap-maxlength/src/bootstrap-maxlength.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/bootstrap-switch/dist/js/bootstrap-switch.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/js/framework/components/plugins/forms/bootstrap-switch.init.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/vendors/bootstrap-multiselectsplitter/bootstrap-multiselectsplitter.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/bootstrap-select/dist/js/bootstrap-select.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/select2/dist/js/select2.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/typeahead.js/dist/typeahead.bundle.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/handlebars/dist/handlebars.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/inputmask/dist/jquery.inputmask.bundle.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/inputmask/dist/inputmask/inputmask.date.extensions.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/inputmask/dist/inputmask/inputmask.numeric.extensions.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/inputmask/dist/inputmask/inputmask.phone.extensions.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/nouislider/distribute/nouislider.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/owl.carousel/dist/owl.carousel.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/autosize/dist/autosize.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/clipboard/dist/clipboard.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/ion-rangeslider/js/ion.rangeSlider.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/dropzone/dist/dropzone.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/summernote/dist/summernote.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/markdown/lib/markdown.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/bootstrap-markdown/js/bootstrap-markdown.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/js/framework/components/plugins/forms/bootstrap-markdown.init.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/jquery-validation/dist/jquery.validate.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/jquery-validation/dist/additional-methods.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/js/framework/components/plugins/forms/jquery-validation.init.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/bootstrap-notify/bootstrap-notify.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/js/framework/components/plugins/base/bootstrap-notify.init.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/toastr/build/toastr.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/jstree/dist/jstree.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/raphael/raphael.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/morris.js/morris.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/chartist/dist/chartist.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/chart.js/dist/Chart.bundle.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/js/framework/components/plugins/charts/chart.init.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/vendors/bootstrap-session-timeout/dist/bootstrap-session-timeout.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/vendors/jquery-idletimer/idle-timer.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/waypoints/lib/jquery.waypoints.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/counterup/jquery.counterup.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/es6-promise-polyfill/promise.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/sweetalert2/dist/sweetalert2.min.js" type="text/javascript"></script>
+    <script src="/Theme/vendors/js/framework/components/plugins/base/sweetalert2.init.js" type="text/javascript"></script>
+
+    <!--end:: Global Optional Vendors -->
+    <!--begin::Global Theme Bundle -->
+    <script src="/Theme/assets/demo/base/scripts.bundle.js" type="text/javascript"></script>
+
+
+    <!--end::Global Theme Bundle -->
+    @RenderSection("scripts", required: false)
+
+</body>
+
+<!-- end::Body -->
+</html>
+

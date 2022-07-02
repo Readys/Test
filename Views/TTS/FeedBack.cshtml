@@ -1,0 +1,130 @@
+﻿@model IEnumerable<TTS.Models.ViewPassTest>
+@using TTS.Models;
+@{
+    ViewBag.Title = "Опрос";
+
+    var m = Model;
+    var x = 1;
+}
+
+<h2>Опрос</h2>
+<br />
+
+<form class="kt-form" id="app-1" >
+    <div class="kt-portlet__body">
+        <div class="kt-section kt-section--first">
+            <div v-for="(m, index) in model">
+                <h3 class="kt-section__title">
+                    {{m.Question.QuestionRu}}
+                </h3>
+                <div class="kt-section__body">
+                    <div class="form-group row" v-if="m.TypeId == 105">
+                        <label class="col-lg-2 col-form-label">{{m.TypeName}}:</label>
+                        <div class="col-lg-6">
+                            <textarea  v-model="m.TextAnswer" v-on:change="SaveFeedback(m.UserId, m.TestsId, m.Question.QuestionId, 0, 0, m.TextAnswer, m.TypeId, index)" class="form-control" id="exampleTextarea" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group row" v-if="m.TypeId == 13">
+                        <label class="col-lg-2 col-form-label">{{m.TypeName}}:</label>
+                        <div class="col-lg-6">
+                            13
+                        </div>
+                    </div>
+                    <div class="form-group row" v-if="m.TypeId == 11">
+                        <label class="col-lg-2 col-form-label">{{m.TypeName}}:</label>
+                        <div class="col-lg-6">
+                            <label v-for="a in m.Answers" class="kt-radio kt-radio--bold kt-radio--success">
+                                <input v-on:change="SaveFeedback(m.UserId, m.TestsId, m.Question.QuestionId, m.AnswerSingle.AnswerId, 0, m.TextAnswer, m.TypeId, index)" v-bind:value="a" v-model="m.AnswerSingle" type="radio" v-bind:name="m.Question.QuestionId+'a'"> {{a.AnswerRu}}&nbsp;&nbsp;
+                                <span></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group row" v-if="m.TypeId == 12">
+                        <label class="col-lg-2 col-form-label">{{m.TypeName}}:</label>
+                        <div class="col-lg-6">
+                            <label v-for="a in m.Answers" class="kt-radio kt-radio--bold kt-radio--success">
+                                <input v-on:change="SaveFeedback(m.UserId, m.TestsId, m.Question.QuestionId, m.AnswerSingle.AnswerId, 0, m.TextAnswer, m.TypeId, index)" v-bind:value="a" v-model="m.AnswerSingle" type="radio" v-bind:name="m.Question.QuestionId+'a'"> {{a.AnswerRu}}&nbsp;&nbsp;
+                                <span></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group row" v-if="m.TypeId == 53">
+                        <label class="col-lg-2 col-form-label">{{m.TypeName}}:</label>
+                        <div class="col-lg-6">
+                            <label v-for="(a, indexA) in m.Answers" class="kt-checkbox kt-checkbox--bold kt-checkbox--success">
+                                <input  v-on:change="SaveFeedback(m.UserId, m.TestsId, m.Question.QuestionId, 0, indexA, m.TextAnswer, m.TypeId, index)" v-bind:value="a" v-model="m.AnswersSelected" v-bind:name="m.Question.QuestionId+'a'" type="checkbox">  {{a.AnswerRu}} &nbsp;&nbsp;
+                                <span></span>
+                                <br />
+                            </label>
+                        </div>
+                    </div>
+                    <div class="kt-separator kt-separator--border-dashed kt-separator--space-lg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="kt-portlet__foot">
+        <div class="kt-form__actions">
+            <div class="row">
+                <div class="col-lg-3"></div>
+                <div class="col-lg-6">
+                    <button type="button" v-on:click="TipaSave" class="btn btn-success">Сохранить</button>
+                    <button type="button"  v-on:click="Cancel"  class="btn btn-secondary">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts
+{
+    <script src="~/Scripts/vue.js"></script>
+    <script src="~/Scripts/axios.min.js"></script>
+
+    <script type="text/javascript">
+
+        var app1 = new Vue({
+        el: '#app-1',
+        data: {
+            model: @Html.Raw(Json.Encode(Model)),
+        },
+        methods: {
+            SaveFeedback: function (userId, FeedbackId, QuestionId, AnswerId, indexA, Text, TypeId, index) {
+                mApp.blockPage('.page-content');
+                var select_val = this.model[index].AnswersSelected;
+                var arrSelectVal = JSON.parse(JSON.stringify(select_val));
+
+                //alert(AnswerId);
+
+                axios.post('/AJAX/SaveFeedback/', {
+                    userId: userId, FeedbackId: FeedbackId, QuestionId: QuestionId, AnswerId: AnswerId, Selected: arrSelectVal, Text: Text, TypeId: TypeId
+
+                    }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                    }).then(response => {
+                        mApp.unblockPage('.page-content');
+
+                        }).catch(error => {
+                            alert('Error');
+                            mApp.unblockPage('.page-content');
+                        });
+            },
+            TipaSave: function () {
+                alert("Опрос сохранен");
+                window.location = '/Home/Index/'
+            },
+            Cancel: function () {
+                window.location = '/Home/Index/'
+            },
+        },
+
+});
+    </script>
+}
+
+@section Styles{
+
+
+}

@@ -1,0 +1,96 @@
+﻿@model IEnumerable<TTS.Models.SubCategoriesForDetailedReport>
+@using TTS.Models;
+@{
+
+    Layout = null;
+
+    ViewBag.Title = "Результаты теста";
+    var tree = (List<Tree>)ViewBag.Tree;
+    var viewResultTest = (ViewResultTest)ViewBag.ViewResultTest;
+    var allRightAnswersCount = ViewBag.AllRightAnswersCount;
+    var wrongQuestions = (List<ViewQuestion>)ViewBag.WrongQuestions;
+    var maxWeight = ViewBag.MaxWeight;
+    var i = 0;
+    var checkWrong = allRightAnswersCount - viewResultTest.rightAnswersCount;
+    var summTest = 0;
+
+}
+@if (viewResultTest.rightWeight > (maxWeight - 1))
+{
+    <div id="successTest" style="padding-bottom:15px;">
+        <h1 style="color:green;">Поздравляем! Вы успешно прошли тест!</h1>
+    </div>
+}
+else
+{
+    <div id="successTest" style="padding-bottom:15px;">
+        <h1 style="color:red;">Вы не прошли тест!</h1>
+    </div>
+}
+
+<div style="padding-bottom:15px;">
+    <h2>Отвечено на вопросы: @viewResultTest.rightAnswersCount из @allRightAnswersCount</h2>
+    <a class="btn btn-danger" href="/">Вернуться на главную страницу</a>
+</div>
+
+<ul>
+    @foreach (var item0 in Model)
+    {
+    <li> <span>@item0.subCategoryName</span> <text>-</text> <span>@item0.subCategoryResult</span></li>
+        <li>
+            @if (item0.SubCategories != null)
+            {
+                <ul>
+                    @foreach (var item1 in item0.SubCategories)
+                    {
+                        <li>
+                            <span>@item1.subCategoryName</span> -  <span>@item1.subCategoryResult</span>
+                        </li>
+                    }
+                </ul>
+            }             
+        </li>
+        }
+
+    <li><h3 style="color:red;">Всего баллов набрано: @viewResultTest.rightWeight из @maxWeight необходимых</h3></li>
+</ul>
+
+@if (wrongQuestions.Count() > 0)
+{
+    <h2>Вопросы, на которые были даны неверные ответы:</h2>
+}
+
+<table class="table" border="0" style="display:normal">
+    @foreach (var item in wrongQuestions)
+    {
+    i++;
+    <tr>
+        <td>@i</td>
+        <td>
+            <h3 style="color:red;">@item.Question.QuestionRu</h3>
+            @foreach (var pic in item.PictureList)
+            {
+                <div style="">
+                    <a v-bind:href="'/images?id='@pic" target="_blank" style="">
+                        <img style="max-height:500px; max-width:100%; display: block;" src="'/images?id='@pic" />
+                    </a>
+                    <br /> <br />
+                </div>
+            }
+        </td>
+    </tr>
+    }
+
+</table>
+
+
+@section Scripts
+{
+
+
+}
+
+@section Styles{
+
+
+}

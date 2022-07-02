@@ -1,0 +1,645 @@
+﻿@model IEnumerable<TTS.Models.ViewAttestationReport>
+
+@using TTS.Models;
+@using PagedList;
+@using PagedList.Mvc
+@{
+    /**/
+
+    ViewBag.Title = "Список аттестаций и тестируемых";
+    ViewBag.Description = "";
+
+    var attestation = ViewBag.Attestation;
+
+    var allUsers = (List<L_User>)ViewBag.AllUsers;
+    var actualTests = (List<Tests>)ViewBag.ActualTests;
+    var appUserId = ViewBag.AppUser;
+    IEnumerable<UserInRole> access = ViewBag.Access;
+
+    //var attestationLMUserId = ViewBag.AttestationLMUsers;
+
+    var checkHR = 0;
+    if (access.Where(w => w.RoleId == 2).Count() > 0)
+    {
+        checkHR = 1;
+    }
+
+    var xx = 55;
+
+}
+
+<style>
+    tbody td {
+        cursor: auto;
+    }
+</style>
+
+<div class="portlet">
+    <div class="portlet-title">
+        <div class="caption">
+        </div>
+        <div class="actions">
+        </div>
+    </div>
+    <div class="portlet-body">
+        <div class="col-lg-12" id="Table">
+            <div class="m-demo" data-code-preview="true" data-code-html="true" data-code-js="false">
+                <div class="m-demo__preview">
+                    <div class="m-divider">
+                        <span></span>
+                        <span>2019</span>
+                        <span></span>
+                    </div>
+                    <ul class="m-nav m-nav--active-bg" id="m_nav" role="tablist">
+                        <li class="m-nav__item m-nav__item--active" v-for="(att, index) in AttestationList">
+                            <a class="m-nav__link collapsed" role="tab" v-bind:id="'m_nav_link_'+index" data-toggle="collapse" v-bind:href="'#m_nav_sub_'+index" aria-expanded="false">
+                                <i class="m-nav__link-icon flaticon-chat-1"></i>
+                                <span class="m-nav__link-title">
+                                    <span class="m-nav__link-wrap">
+                                        <span class="m-nav__link-text" style="font-size:large;"><b>{{att.Attestation.AttestationName}}</b></span>
+                                    </span>
+                                </span>
+                                <span class="m-nav__link-arrow"></span>
+                            </a>
+                            <ul class="m-nav__sub collapse" v-bind:id="'m_nav_sub_'+index" role="tabpanel" aria-labelledby="'m_nav_link_'+index" data-parent="#m_nav" style="">
+                                <li class="m-nav__item" style="padding:10px; color:gray;">
+                                    <span v-if="att.LazyUser.length != 0">Не начинали проходить аттестацию:</span>
+                                    <span v-for="lu in att.LazyUser">{{lu.NameRu}}; </span>
+                                    <span v-if="att.LazyUser.length == 0"><a :href="`/Report/CreateDetailedExcel?CertificationId=${att.Attestation.AttestationId}&Level=${att.Attestation.CertificationLevelToPass}`" style="display:block; margin-left:auto; margin-right: 0; font-size:15px; width:20%;" class="btn btn-outline-success m-btn m-btn--custom"><i>Сформировать отчет</i></a></span>
+                                    <hr />
+                                </li>
+                                <li class="m-nav__item" v-for="(t, indexT) in att.ViewUsersAttestationReport" v-if="t.ViewResultTests.length != 0">
+                                    <table style="">
+                                        <tr>
+                                            <td><span style="font-size:18px;"><b>{{t.User.NameRu}}</b></span> </td>
+                                            <td><label style="margin-left:10px; margin-top:4px;">Отзыв:</label></td>
+                                            <td>
+                                                <div class="kt-demo-icon">
+                                                    <button v-on:click="Feedback(index, indexT)" type="button" class="btn m-btn--pill m-btn--air  btn-secondary" style="margin: 5px;">
+                                                        <i class="flaticon-list"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td><label style="margin-left:10px; margin-top:4px;">Текущий уровень:</label></td>
+                                            <td>
+                                                <div style="width:80px;" class="input-group input-group-sm">
+                                                    <input style="border-radius:20px; margin-left:5px;" type="number" v-bind:disabled="bool_checkHR" v-on:change="UpdateAchievementsLevel(index, indexT, t.UsersAchievements.LevelId, t.User.UserId)" v-model="t.UsersAchievements.LevelId" min="0" class="form-control m-input" aria-describedby="basic-addon2">
+                                                </div>
+                                            </td>
+                                            <td><label style="margin-left:10px; margin-top:4px;">Рекомендуемый уровень:</label></td>
+                                            <td>
+                                                <div style="width:80px;" class="input-group input-group-sm">
+                                                    <input style="border-radius:20px; margin-left:5px;" v-bind:disabled="bool_checkHR" v-on:change="SaveRecomendLevel(index, indexT, t.RecomendLevel, t.User.UserId)" v-model="t.RecomendLevel" type="number" min="0" class="form-control m-input" aria-describedby="basic-addon2">
+                                                </div>
+                                            </td>
+                                            <td v-if="@appUserId == att.Attestation.LMUserId"><label style="margin-left:10px; margin-top:4px;">Подверждение уровня (LM):</label></td>
+                                            <td v-if="@appUserId == att.Attestation.LMUserId">
+                                                <span class="m-switch m-switch--outline m-switch--icon m-switch--success">
+                                                    <label style="margin-top:7px; margin-left:5px;">
+                                                        <input v-on:change="SaveRecomendLevel(index, indexT, t.RecomendLevel, t.User.UserId)" v-model="t.LMConfirmRL" type="checkbox" name="ConfirmLevel">
+                                                        <span></span>
+                                                    </label>
+                                                </span>
+                                            </td>
+                                            <td v-if="bool_checkHR"><label style="margin-left:10px; margin-top:4px;">Подверждение уровня (HR):</label></td>
+                                            <td v-if="bool_checkHR">
+                                                <span class="m-switch m-switch--outline m-switch--icon m-switch--success">
+                                                    <label style="margin-top:7px; margin-left:5px;">
+                                                        <input v-on:change="SaveRecomendLevel(index, indexT, t.RecomendLevel, t.User.UserId)" v-model="t.HRConfirmRL" type="checkbox" name="ConfirmLevel">
+                                                        <span></span>
+                                                    </label>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <br />
+                                    <table class="table table-bordered col-md-12" style="width:98%; margin-top:1px;" id="">
+                                        <thead>
+                                            <tr>
+                                                <th style="width:5%; text-align:center; vertical-align:middle;">
+                                                    <div style="margin-bottom:3px;">
+                                                        <span>№</span>
+                                                    </div>
+                                                </th>
+                                                <th style="width:19%; text-align:center; vertical-align:middle;">
+                                                    <span>Результат теста</span>
+                                                </th>
+                                                <th style="width:19%; text-align:center; vertical-align:middle;">
+                                                    <span>Текстовые ответы</span>
+                                                </th>
+                                                <th style="width:19%; text-align:center; vertical-align:middle;">
+                                                    <label>Практический экзамен</label>
+                                                </th>
+                                                <th style="width:19%; text-align:center; vertical-align:middle;">
+                                                    <label>Устный экзамен</label>
+                                                </th>
+                                                <th style="width:19%; text-align:center; vertical-align:middle;">
+                                                    <label>Средний балл / Порог - {{t.TargetProcent}}% </label>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(test, i) in t.ViewResultTests">
+                                                <td align="center" style="width:10%; text-align:center; vertical-align:middle;">
+                                                    {{i + 1}}
+                                                </td>
+                                                <td align="center" style="width:10%; text-align:center; vertical-align:middle;">
+                                                    <button v-on:click="ResultAutoTest(index, indexT, i)" type="button" class="btn m-btn--pill m-btn--air  btn-secondary">{{test.WeightResult}}% </button>
+                                                </td>
+                                                <td align="center" style="width:10%; text-align:center; vertical-align:middle;">
+                                                    <button v-on:click="CheckTest(index, indexT, i)" type="button" class="btn m-btn--pill m-btn--air  btn-secondary" style="margin:5px;">{{test.CheckedText}}%</button>
+                                                </td>
+                                                <td align="center" style="width:10%; text-align:center; vertical-align:middle;">
+                                                    <input type="number" class="form-control m-input m-input--air m-input--pill" v-model="test.PracticalExamination" v-on:change="PracticTest(index, indexT, i)" id="example-number-input" max="100" min="0" style="min-width:100px; max-width:120px;">
+                                                </td>
+                                                <td align="center" style="width:10%; text-align:center; vertical-align:middle;">
+                                                    <input class="form-control m-input m-input--air m-input--pill" v-model="test.VerbalExamination" v-on:change="VerbalTest(index, indexT, i)" type="number" id="example-number-input" max="100" min="0" style="min-width:100px; max-width:120px;">
+                                                </td>
+                                                <td align="center" style="width:10%; text-align:center; vertical-align:middle;">
+                                                    <label id="summary">{{(parseInt(test.WeightResult) + parseInt(test.CheckedText) + parseInt(test.PracticalExamination) + parseInt(test.VerbalExamination))/4}}</label>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <hr />
+        <div class="todo-tasklist-devider"></div>
+        @{
+            Html.PagedListPager((IPagedList)attestation, page => Request.CurrentExecutionFilePath + "?page=" + page);
+        }
+    </div>
+</div>
+
+
+
+
+
+
+<div id="MarkModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Текстовые ответы</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="index" />
+                <div id="Table" v-for="(c, index) in questionList">
+                    <h3>{{c.subCategoryName}}</h3>
+                    <table class="table table-bordered m-table" border="1">
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>Вопрос</th>
+                                <th>Ответ на вопрос</th>
+                                <th>Оценка</th>
+                            </tr>
+                        </thead>
+                        <tr v-for="(q, indexQ) in c.TextQuestion">
+                            <td width="3%">{{q.QuestionId}}</td>
+                            <td width="30%">
+                                <p>{{q.QuestionRu}}</p>
+                                <p v-for="(p, index_P) in q.PictureList">
+                                    <img style="max-width:100%" v-bind:src="'/images?id='+p" />
+                                </p>
+                            </td>
+                            <td width="60%">{{q.Answers}}</td>
+                            <td width="7%">
+                                <input class="form-control m-input" v-on:change="SaveTextMark(index)" v-model="q.ManagerMark" type="number" value="0" id="example-number-input" max="5" min="0" style="min-width:100px;">
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="info">
+                        <div class="pull-right">
+                            <span class="">{{counter}}% </span> <button id="" class="btn btn-success " v-on:click="SummTextAnswers(counter)">Сохранить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="ResultAutoTestModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Ответы на тест </h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="index" />
+                <div id="Table" v-for="(c, index) in questionList0">
+                    <h3>{{c.subCategoryName}}</h3>
+                    <table class="table table-bordered m-table" border="1">
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>Вопрос</th>
+                                <th>Ответы на вопросы</th>
+                            </tr>
+                        </thead>
+                        <tr v-for="(q, indexQ) in c.ViewQuestion">
+                            <td width="3%">{{q.Question.QuestionId}}</td>
+                            <td width="30%">
+                                <p>{{q.Question.QuestionRu}}</p>
+                                <p v-for="(p, index_P) in q.PictureList">
+                                    <img style="max-width:100%" v-bind:src="'/images?id='+p" />
+                                </p>
+                            </td>
+                            <td width="60%">
+                                <div v-if="q.SubQuestion.length == 0">
+                                    <span><b>Варианты ответов:</b> </span><p v-for="a1 in q.Answers">{{a1.AnswerRu}}</p>
+                                    <hr style="width:90%;" />
+                                    <span><b>Выбраные ответы:</b> </span><p v-for="a2 in q.AnswersSelected"><span v-if="a2.Weight > 0" style="color:forestgreen">{{a2.AnswerRu}}  (Вес: {{a2.Weight}}) </span><span v-else style="color:red">{{a2.AnswerRu}} Вес: ({{a2.Weight}})</span></p>
+                                    <hr style="width:90%;" />
+                                    <span><b>Правильные ответы:</b> </span><p v-for="a3 in q.RightAnswers">{{a3.AnswerRu}}</p>
+                                </div>
+                                <div v-else>
+                                    <table class="table table-bordered m-table" border="1">
+                                        <thead>
+                                            <tr>
+                                                <th>№</th>
+                                                <th>Вопрос</th>
+                                                <th>Ответы на вопросы</th>
+                                            </tr>
+                                        </thead>
+                                        <tr v-for="(sq, indexSQ) in q.SubQuestion">
+                                            <td width="3%">{{sq.Question.QuestionId}}</td>
+                                            <td width="30%">
+                                                <p>{{sq.Question.QuestionRu}}</p>
+                                            </td>
+                                            <td>
+                                                <span><b>Выбраный ответ:</b> </span><p v-for="a1 in sq.AnswersSelected">{{a1.AnswerRu}}</p>
+                                                <hr style="width:90%;" />
+                                                <span><b>Правильный ответ:</b> </span><p v-for="a2 in sq.SubAnswers">{{a2.AnswerRu}}</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="FeedbackModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Отзыв</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="index" />
+                <div id="Table" v-for="(c, index) in questionList4">
+                    <h3>Отзыв</h3>
+                    <table class="table table-bordered m-table" border="1">
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>Вопрос</th>
+                                <th>Ответы на вопросы</th>
+                            </tr>
+                        </thead>
+                        <tr v-for="(q, indexQ) in c.ViewQuestion">
+                            <td width="3%">{{q.Question.QuestionId}}</td>
+                            <td width="30%">
+                                <p>{{q.Question.QuestionRu}}</p>
+                                <p v-for="(p, index_P) in q.PictureList">
+                                    <img style="max-width:100%" v-bind:src="'/images?id='+p" />
+                                </p>
+                            </td>
+                            <td width="60%">
+                                <div v-if="q.TextAnswer2 == null">
+                                    <span><b>Варианты ответов:</b> </span><p v-for="a1 in q.Answers">{{a1.AnswerRu}}</p>
+                                    <hr style="width:90%;" />
+                                    <span><b>Выбраные ответы:</b> </span><p v-for="a2 in q.AnswersSelected"><span v-if="a2.Weight > 0" style="color:forestgreen">{{a2.AnswerRu}}  (Вес: {{a2.Weight}}) </span><span v-else style="color:red">{{a2.AnswerRu}} Вес: ({{a2.Weight}})</span></p>
+
+                                </div>
+                                <div v-if="q.TextAnswer2 != null">
+                                    <p>{{q.TextAnswer2}}</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+@section Styles {
+    <!-- BEGIN PAGE LEVEL STYLES -->
+    <!-- END PAGE LEVEL STYLES -->
+    <link rel="stylesheet" type="text/css" href="~/Content/css/select2.min.css" />
+    <link href="~/Content/PagedList.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+}
+@section Scripts {
+    <script src="~/Scripts/axios.min.js"></script>
+    <script src="~/Scripts/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var checkHR = @checkHR;
+            var bool_checkHR = true;
+            if (checkHR == 1) {
+                bool_checkHR = true;
+            } else {
+                bool_checkHR = false;
+            }
+
+        });
+
+        function createData() {
+            var checkHR = @checkHR;
+            var bool_checkHR = true;
+            if (checkHR == 1) {
+                bool_checkHR = true;
+            } else {
+                bool_checkHR = false;
+            }
+            return bool_checkHR;
+        }
+    </script>
+
+    <script>
+          var vm = new Vue({
+            el: '#Table',
+            data: {
+                AttestationList:@Html.Raw(Json.Encode(Model)),
+                bool_checkHR: createData(),
+            },
+              computed: {
+
+            },
+              methods: {
+                  Feedback: function (index, indexT) {
+                      mApp.blockPage('.page-content');
+                      var userId = this.AttestationList[index].ViewUsersAttestationReport[indexT].User.UserId;
+                      var attestationId = this.AttestationList[index].Attestation.AttestationId;
+                      var feedbackId = this.AttestationList[index].Attestation.FeedbackId;
+
+                      //alert(testId);
+                      axios.post('/Home/FeedbackView/', {
+                          userId: userId, attestationId: attestationId, feedId: feedbackId,
+                      }, {
+                              headers: {
+                                  'Content-Type': 'application/json',
+                              }
+                          }).then(response => {
+                              vm4.questionList4 = response.data;
+                              $('#FeedbackModal').modal('show');
+                              mApp.unblockPage('.page-content');
+                          }).catch(error => {
+                              alert('Error');
+                              mApp.unblockPage('.page-content');
+                          });
+                  },
+                  ResultAutoTest: function (index, indexT, i) {
+                      mApp.blockPage('.page-content');
+                      var userId = this.AttestationList[index].ViewUsersAttestationReport[indexT].User.UserId;
+                      var attestationId = this.AttestationList[index].Attestation.AttestationId;
+                      var testId = this.AttestationList[index].ViewUsersAttestationReport[indexT].ViewResultTests[i].TestId;
+                      //alert(testId);
+                      //window.open("/Home/CheckTest?userId=" + userId + "&attestationId=" + attestationId + "&testId=" + testId);
+                      axios.post('/Home/ResultTest/', {
+                          userId: userId, attestationId: attestationId, testId: testId,
+                      }, {
+                              headers: {
+                                  'Content-Type': 'application/json',
+                              }
+                          }).then(response => {
+                              vm3.questionList0 = response.data;
+                              $('#ResultAutoTestModal').modal('show');
+                              mApp.unblockPage('.page-content');
+                          }).catch(error => {
+                              alert('Error');
+                              mApp.unblockPage('.page-content');
+                          });
+                  },
+                  CheckTest: function (index, indexT, i) {
+                    mApp.blockPage('.page-content');
+                    var userId = this.AttestationList[index].ViewUsersAttestationReport[indexT].User.UserId;
+                    var attestationId = this.AttestationList[index].Attestation.AttestationId;
+                    var testId = this.AttestationList[index].ViewUsersAttestationReport[indexT].ViewResultTests[i].TestId;
+                    //alert(testid);
+                    //window.open("/home/checktest?userid=" + userid + "&attestationid=" + attestationid + "&testid=" + testid);
+                    axios.post('/Home/CheckTest/', {
+                        userId: userId, attestationId: attestationId, testId: testId,
+                    }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                        }).then(response => {
+                            vm2.questionList = response.data;
+                            vm2.testid = testId;
+                            vm2.indexAtt = index;
+                            vm2.indexTest = indexT;
+                            vm2.ay = i;
+                            $('#MarkModal').modal('show');
+                            mApp.unblockPage('.page-content');
+                    }).catch(error => {
+                        alert('Error');
+                        mApp.unblockPage('.page-content');
+                    });
+                },
+                PracticTest: function (index, indexT, i) {
+                    var userId = this.AttestationList[index].ViewUsersAttestationReport[indexT].User.UserId;
+                    var attestationId = this.AttestationList[index].Attestation.AttestationId;
+                    var testId = testId = this.AttestationList[index].ViewUsersAttestationReport[indexT].ViewResultTests[i].TestId;
+                    var practicalExamination = this.AttestationList[index].ViewUsersAttestationReport[indexT].ViewResultTests[i].PracticalExamination;
+                    axios.post('/AJAX/SavePracticTest/', {
+                        userId: userId, attestationId: attestationId, testId: testId, practicalExamination: practicalExamination,
+                    }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        }).then(response => {
+                            vm2.questionList = response.data;
+                        }).catch(error => {
+                            alert('Error');
+                        });
+                },
+                VerbalTest: function (index, indexT, i) {
+                    var userId = this.AttestationList[index].ViewUsersAttestationReport[indexT].User.UserId;
+                    var attestationId = this.AttestationList[index].Attestation.AttestationId;
+                    var testId = testId = this.AttestationList[index].ViewUsersAttestationReport[indexT].ViewResultTests[i].TestId;
+                    var verbalExamination = this.AttestationList[index].ViewUsersAttestationReport[indexT].ViewResultTests[i].VerbalExamination;
+                    //alert(verbalExamination);
+                    axios.post('/AJAX/SaveVerbalTest/', {
+                        userId: userId, attestationId: attestationId, testId: testId, verbalExamination: verbalExamination,
+                    }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        }).then(response => {
+                            vm2.questionList = response.data;
+                        }).catch(error => {
+                            alert('Error');
+                        });
+                  },
+                  UpdateAchievementsLevel: function (index, indexT, level, userId) {
+
+                      //alert(userId);
+                      axios.post('/AJAX/UpdateAchievementsLevel/', {
+                          userId: userId, level: level, appUserId: @appUserId
+                      }, {
+                              headers: {
+                                  'Content-Type': 'application/json',
+                              }
+                          }).then(response => {
+                              alert(response.data);
+                          }).catch(error => {
+                              alert('Error');
+                          });
+                  },
+                  SaveRecomendLevel: function (index, indexT, recommendedLevel, userId) {
+                      var attestationId = this.AttestationList[index].Attestation.AttestationId;
+                      var summ = $("#summary").html();
+                      var number = parseInt(summ);
+                      //alert(number);
+
+                      axios.post('/AJAX/SaveRecomendLevel/', {
+                          userId: userId, attestationId: attestationId, recommendedLevel: recommendedLevel, appUserId: @appUserId, summation: number,
+                      }, {
+                              headers: {
+                                  'Content-Type': 'application/json',
+                              }
+                          }).then(response => {
+                              vm2.questionList = response.data;
+                          }).catch(error => {
+                              alert('Error');
+                          });
+                  },
+            }
+        });
+
+    </script>
+
+    <script>
+        var vm2 = new Vue({
+            el: '#MarkModal',
+            data: {
+                questionList: [{ "subCategoryId": 2, "subCategoryName": "Гидравлика ", "subCategoryResult": 0, "ViewQuestion": [{ "QuestionId": 33, "Question": { "QuestionId": 33, "QuestionRu": "Опишите работу обратного клапана в гидравлической системе?", "CreateDate": "\/Date(1539177971627)\/", "ModifedDate": "\/Date(1542635035193)\/", "CreatedByUserId": 1, "TypeId": 53, "LevelId": 7, "Deleted": 0, "Published": 1 }, "CategoryList": null, "DepartmentList": null, "PictureList": [136], "LevelsList": null, "isEdit": false, "Answers": null, "AnswersSelected": [{ "AnswerId": 28, "QuestionId": 33, "Weight": 0, "AnswerRu": "Нужен как часть «гидрозамка»", "isEdit": false }], "QuestionRightProcent": 0, "TextAnswer": 0 }], "TestsItems": null }],
+                testid: 0,
+                indexAtt: 0,
+                indexTest: 0,
+                ay: 0,
+            },
+            computed: {
+                counter: {
+                    get: function () {
+                        var dlina = this.questionList.length;
+                        var max = 5;
+                        var maxsumm = 0;
+                        //alert(dlina);
+                        var count = 0;
+                        for (var i = 0; i < dlina; i++) {
+                            var mark = parseInt(this.questionList[i].ManagerMark) || 0;
+                            count = count + mark;
+
+                        }
+                        maxsumm = dlina * max
+                        count = (count / maxsumm) * 100;
+                        return Math.round(count)
+                    },
+                },
+            },
+            methods: {
+                SaveTextMark: function (index) {
+                    var attestationId = vm.AttestationList[0].Attestation.AttestationId;
+                    //alert(this.testid);
+                    var mark = this.questionList[index].ManagerMark;
+                    axios.post('/AJAX/SaveTextMark/', {
+                        qid: this.questionList[index].QuestionId, mark: mark,
+                        attestationId: attestationId, testId: this.testid,
+                    }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        }).then(response => {
+
+                        }).catch(error => {
+                            alert('Error');
+                        });
+                },
+                SummTextAnswers: function (counter) {
+                    var attestationId = vm.AttestationList[0].Attestation.AttestationId;
+                    axios.post('/AJAX/SummTextAnswers/', {
+                        summ: counter, attestationId: attestationId, testId: this.testid,
+                    }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        }).then(response => {
+
+                            alert("Результат сохранен");
+                            vm.AttestationList[this.indexAtt].ViewUsersAttestationReport[this.indexTest].ViewResultTests[this.ay].CheckedText = parseInt(counter);
+                        }).catch(error => {
+                            alert('Error');
+                        });
+                },
+            }
+        });
+
+        var vm3 = new Vue({
+            el: '#ResultAutoTestModal',
+            data: {
+                questionList0: [{ "subCategoryId": 2, "subCategoryName": "Гидравлика", "subCategoryResult": 0, "ViewQuestion": [{ "QuestionId": 33, "SubQuestion": [{ "Question": { "QuestionId": 33, "QuestionRu": "Опишите работу обратного клапана в гидравлической системе?" }, "SubAnswers": [{ "AnswerId": 1554, "value": 1554, "QuestionId": 0, "Weight": 0, "AnswerRu": "Ответ 2", "isEdit": false }] }], "Question": { "QuestionId": 33, "QuestionRu": "Опишите работу обратного клапана в гидравлической системе?", "CreateDate": "\/Date(1539177971627)\/", "ModifedDate": "\/Date(1542635035193)\/", "CreatedByUserId": 1, "TypeId": 53, "LevelId": 7, "Deleted": 0, "Published": 1 }, "CategoryList": null, "DepartmentList": null, "PictureList": [136], "LevelsList": null, "isEdit": false, "Answers": null, "AnswersSelected": [{ "AnswerId": 28, "QuestionId": 33, "Weight": 0, "AnswerRu": "Нужен как часть «гидрозамка»", "isEdit": false }], "QuestionRightProcent": 0, "TextAnswer": 0 }], "TestsItems": null }],
+                testid: 0,
+                indexAtt: 0,
+                indexTest: 0,
+            },
+            computed: {
+            },
+            methods: {
+
+            }
+        });
+
+        var vm4 = new Vue({
+            el: '#FeedbackModal',
+            data: {
+                questionList4: [{ "subCategoryId": 2, "subCategoryName": "Гидравлика", "subCategoryResult": 0, "ViewQuestion": [{ "QuestionId": 33, "SubQuestion": [{ "Question": { "QuestionId": 33, "QuestionRu": "Опишите работу обратного клапана в гидравлической системе?" }, "SubAnswers": [{ "AnswerId": 1554, "value": 1554, "QuestionId": 0, "Weight": 0, "AnswerRu": "Ответ 2", "isEdit": false }] }], "Question": { "QuestionId": 33, "QuestionRu": "Опишите работу обратного клапана в гидравлической системе?", "CreateDate": "\/Date(1539177971627)\/", "ModifedDate": "\/Date(1542635035193)\/", "CreatedByUserId": 1, "TypeId": 53, "LevelId": 7, "Deleted": 0, "Published": 1 }, "CategoryList": null, "DepartmentList": null, "PictureList": [136], "LevelsList": null, "isEdit": false, "Answers": null, "AnswersSelected": [{ "AnswerId": 28, "QuestionId": 33, "Weight": 0, "AnswerRu": "Нужен как часть «гидрозамка»", "isEdit": false }], "QuestionRightProcent": 0, "TextAnswer": 0 }], "TestsItems": null }],
+                testid: 0,
+                indexAtt: 0,
+                indexTest: 0,
+            },
+            computed: {
+            },
+            methods: {
+
+            }
+        });
+
+    </script>
+
+}

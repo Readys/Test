@@ -1,0 +1,203 @@
+﻿@model IEnumerable<TTS.Models.ViewTest>
+@using TTS.Models;
+@using PagedList;
+@using PagedList.Mvc
+@{
+    ViewBag.Title = "Шаблоны аттестаций";
+    ViewBag.Description = "";
+
+    var tree = (List<Tree>)ViewBag.Tree;
+    var appUserId = ViewBag.AppUserId;
+    var allLevels = tree.Where(w => w.TypeId == 3);
+    var testTemplateItem = (List<TestTemplateItem>)ViewBag.TestTemplateItem;
+    var tests = (List<Tests>)ViewBag.Tests;
+    IEnumerable<UserInRole> access = ViewBag.Access;
+
+    var thisTestid = 0;
+}
+
+<style>
+    tbody tr {
+        /*cursor: pointer;*/
+    }
+    table td {
+        border: 1px solid #999 !important;
+    }
+
+    table th {
+        border: 1px solid #999 !important;
+    }
+</style>
+
+<div class="portlet">
+    <div class="portlet-title">
+        <div class="caption">
+            <br />
+        </div>
+        <div class="actions">
+            <a class="btn btn-lg btn-success" href="/TTS/EditTest?id=0">Создать шаблон аттестации</a>
+            <!--<a class="btn btn-success" href="/TTS/CreateQuestions?id=0">Создать новый вопрос</a>
+            <a class="btn btn-success" href="/TTS/Questions">Все вопросы</a>
+            <a class="btn btn-success" href="/Tree/">Редактирование категорий</a>
+                 -->
+        </div>
+
+    </div>
+    <br />
+    <div class="portlet-body">
+            <div class="form-body">
+                <input type="hidden" name="page" value="1" />
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover margin-top-20">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; width: 80px">
+                                    №
+                                </th>
+                                <th style="text-align: left; width: 120px">
+                                    Название
+                                </th>
+                                <th style="text-align: left; width: 120px">
+                                    Темы
+                                </th>
+                                <th style="text-align: center;">
+                                    Время
+                                </th>
+                                <th style="text-align: center; ">
+                                    Сложность
+                                </th>
+                                <th style="text-align: center;">
+                                    Дивизионы
+                                </th>
+                                @if (access.Any())
+                                {
+                                    <th style="text-align: center;">
+                                        Управление
+                                    </th>
+                                }
+
+                            </tr>
+                        </thead>
+                        @if (Model != null)
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td style="vertical-align: middle; text-align: left; width:20px;">
+                                        @item.TestTemplateId
+                                    </td>
+                                    <td style="vertical-align: middle; text-align: left; width:450px;">
+                                        @item.NameRu
+                                    </td>
+                                    <td style="vertical-align: middle; text-align: left;">
+                                        @{ 
+                                            var summ = 0;
+                                        }
+                                        @foreach (var item2 in item.SelectCategoryList)
+                                        {
+                                            var quantity = testTemplateItem.SingleOrDefault(s => s.TestTemplateId == item.TestTemplateId && s.CategoryId == item2.TreeId).QuestionQuantity;
+                                            summ = summ + quantity.Value;
+                                            <a target="_blank" class="btn btn-warning" href="/TTS/Questions?SubjectId=@item2.TreeId">@item2.NameRu - @quantity </a><br /><br />
+                                        }
+                                        @if (item.SelectCategoryList.Count() > 1)
+                                        {
+                                            <text>Всего вопросов:</text> @summ
+                                        }
+                                    </td>
+                                    <td style="vertical-align: middle; text-align: center;">
+                                        @item.Duration
+                                    </td>
+                                    <td style="vertical-align: middle; text-align: center;">
+                                        @foreach (var item4 in item.LevelsList)
+                                        {
+                                            <span class="badge badge-info">@item4.NameRu </span>
+                                        }
+                                    </td>
+                                    <td style="vertical-align: middle; text-align: left;">
+                                        @foreach (var item3 in item.DepartmentList)
+                                        {
+                                            <span class="badge badge-info">@item3.NameRu</span>
+                                        }
+                                    </td>
+                                    @if (access.Any())
+                                    {
+                                        <td style="vertical-align: middle; text-align: left; width:120px;">
+                                            <a class="btn btn-success" onclick="window.location = '@Url.Action("EditTest", "TTS", new { id = item.TestTemplateId })' " href="javascript:;"><i class=" fa fa-pencil-alt"></i> </a>
+                                            <button id="Del" class="btn btn-danger Del"  data-index="@item.TestTemplateId"><i class=" fa fa-trash-alt"></i> </button>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    </table>
+                </div>
+            </div>
+
+        <hr />
+        <div class="todo-tasklist-devider"></div>
+        @{
+            if (Model != null)
+            {
+                @Html.PagedListPager((IPagedList)Model, page => Request.CurrentExecutionFilePath + "?page=" + page)
+            }
+        }
+    </div>
+
+</div>
+
+<div id="DelTS" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Удаление шаблона</h4>
+            </div>
+            <div class="modal-body">
+                <div class="swal2-icon swal2-warning swal2-animate-warning-icon" style="display: flex;"><span class="swal2-icon-text">!</span></div>
+                <h2 align="center" class="swal2-title" id="swal2-title">Вы действительно намерены удалить шаблон?</h2>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger deleteTestTemplate">Удалить шаблон</button>
+                <button OnClick="mApp.unblockPage('.page-content');" type="button" class="btn btn-default Unblok" data-dismiss="modal">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Styles {
+    <!-- BEGIN PAGE LEVEL STYLES -->
+    <link href="/assets/global/css/PagedList.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/PagedList.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <!-- END PAGE LEVEL STYLES -->
+}
+@section Scripts {
+
+
+
+    <script>
+        var id = 0;
+
+        $(".Del").on("click", function (e) {
+            id = $(this).data("index");
+            $('#DelTS').modal('show');
+            mApp.blockPage('.page-content');
+        });
+
+        $('.deleteTestTemplate').on("click", function () {
+            axios.post('/AJAX/DeleteTestTemplate/', { id: id }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then(response => {
+                location.reload(true);
+                //alert(response.data);
+            }).catch(error => {
+                alert('Error')
+            });
+        });
+
+    </script>
+}
+

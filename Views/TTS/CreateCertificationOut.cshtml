@@ -1,0 +1,549 @@
+﻿@model  TTS.Models.Attestation
+@using TTS.Models
+
+
+@{
+    ViewBag.Title = "Назначить аттестацию не сотрудникам компании";
+    IEnumerable<TTS.Models.L_User> users = ViewBag.AllUsers;
+    IEnumerable<TTS.Models.Position> positions = ViewBag.Positions;
+    IEnumerable<TTS.Models.Division> division = ViewBag.Division;
+    TestTemplate template = ViewBag.Template;
+    TestTemplate feedback = ViewBag.Feedback;
+    L_User manager = ViewBag.Manager;
+
+}
+<hr />
+<form action="/TTS/SubmitCertificationOut" method="post" id="CertificationForm" class="m-form m-form--fit m-form--label-align-left" novalidate="novalidate">
+    <div class="m-alert m-alert--icon alert alert-danger m--hide" role="alert" id="CertificationForm_msg">
+        <div class="m-alert__icon">
+            <i class="la la-warning"></i>
+        </div>
+        <div class="m-alert__text">
+            Заполните все поля выделенные красным.
+        </div>
+        <div class="m-alert__close">
+            <button type="button" class="close" data-close="alert" aria-label="Close"></button>
+        </div>
+    </div>
+    <input type="hidden" name="CertificationId" value="@Model.AttestationId" />
+    <div class="form-group m-form__group row" style="">
+        <div class="col-10" style="margin-top:2px;">
+            <input type="submit" class="btn btn-success" value="Опубликовать" style="width:200px; margin-top:5px;  font-size:15px;" id="submitForm" />
+            @if (Model.IsSubmit != true)
+            {
+                <input type="button" name="Save" value="Сохранить" class="btn btn-primary" id="btnSave" style="width:200px; margin-right:2px; margin-top:5px; font-size:15px;" />
+
+            }
+            <input type="button" name="Save" value="Отмена" class="btn btn-danger" id="Cancel" style="width:200px; margin-right:2px; margin-top:5px; font-size:15px;" />
+        </div>
+    </div>
+    <div class="form-group m-form__group row" style="padding-bottom:0px">
+        <label for="CertificationName" class="col-2 col-form-label">Название аттестации*</label>
+        <div class="col-10" style="margin-top:2px;">
+            <input class="form-control m-input" style="width:40%;" type="text" value="@Model.AttestationName" autocomplete="off" name="CertificationName" id="CertificationName">
+        </div>
+    </div>
+    <div class="form-group m-form__group row" style="padding-bottom:0px">
+        <label for="CertificationStartDate" class="col-2 col-form-label">Дата и время начала*</label>
+        <div class="col-10" style="margin-top:2px;">
+            <input class="form-control" readonly="" placeholder="Select date" style="width:40%;" type="text" value="@String.Format("{0:dd.MM.yyyy HH:mm}",Model.StartTime)" data-date-format="dd.mm.yyyy hh:ii" id="CertificationStartDate" name="CertificationStartTime">
+        </div>
+    </div>
+    <div class="form-group m-form__group row" style="padding-bottom:0px">
+        <label for="CertificationEndDate" class="col-2 col-form-label">Дата и время окончания*</label>
+        <div class="col-10" style="margin-top:2px;">
+            <input class="form-control" readonly="" placeholder="Select date" style="width:40%;" type="text" data-date-format="dd.mm.yyyy hh:ii" value="@String.Format("{0:dd.MM.yyyy HH:mm}",Model.FinishTime)" id="CertificationEndDate" name="CertificationEndTime">
+        </div>
+    </div>
+    <div class="form-group m-form__group row" style="padding-bottom:0px">
+        <label for="CertificationTemplate" class="col-2 col-form-label">Шаблон*</label>
+        <div class="col-10" style="margin-top:2px;">
+            <!--
+                <select class="form-control m-select2 select2-hidden-accessible" id="CertificationTemplate" name="TemplateId" style="width:40%;margin-left:15px;">
+                    <option id="TemplateOption" value="" selected="selected"></option>
+                </select>
+            -->
+            @Html.DropDownList("TestTemplateId", null, "", new { @class = "form-control m-select2 f-selectT", @style = "width:40%;margin-left:15px;", @id = "TemplateId_2", @name = "TemplateId_2" })
+        </div>
+    </div>
+    <div class="form-group m-form__group row" style="padding-bottom:0px">
+        <!--<label for="FeedbackTemplate" class="col-2 col-form-label">Опросник</label>-->
+        <div class="col-10" style="margin-top:2px;">
+            <!--
+                <select class="form-control m-select2 select2-hidden-accessible" id="FeedbackTemplate" name="FeedTemplateId" style="width:40%;margin-left:15px;">
+                    <option id="FeedbackTemplateOption" value="" selected="selected"></option>
+                </select>
+            -->
+            @*   @Html.DropDownList("FeedTemplateId", null, "", new { @class = "form-control m-select2 f-selectT", @style = "width:40%;margin-left:15px;", @id = "FeedTemplateId_2", @name = "FeedTemplateId_2" }) *@
+        </div>
+    </div>
+    <div class="form-group m-form__group row" style="padding-bottom:0px">
+        <label for="LMUserId" class="col-2 col-form-label">Линейный руководитель*</label>
+        <div class="col-10" style="">
+            <select class="form-control m-select2 select2-hidden-accessible" id="ManagerId" name="ManagerId" style="width:40%;margin-left:15px;">
+                <option id="LMManagerOptionId" value="" selected="selected"></option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group m-form__group row" style="padding-bottom:0px">
+        <label for="Level" class="col-2 col-form-label">Текущий уровень*</label>
+        <div class="col-10" style="margin-top:2px;">
+            <input class="form-control m-input" style="width:40%;" type="number" value="@Model.CertificationLevel" name="Level" id="Level">
+        </div>
+    </div>
+
+    <div class="form-group m-form__group row" style="padding-bottom:0px">
+        <label for="LeveltoPass" class="col-2 col-form-label">На какой уровень сдают*</label>
+        <div class="col-10" style="margin-top:2px;">
+            <input class="form-control m-input" style="width:40%;" type="number" value="@Model.CertificationLevelToPass" name="LeveltoPass" id="LeveltoPass">
+        </div>
+    </div>
+
+    <div class="m-form__seperator m-form__seperator--dashed m-form__seperator--space"></div>
+</form>
+
+<div class="input-group row" style="margin-left:15px;">
+    <label for="CompanyId" class="col-2 col-form-label" style="margin-top:4px;">Выбор компании</label>
+    <div class="col-md-10" style="margin-bottom:15px; margin-top:5px;">
+        @Html.DropDownList("Companies", null, "", new { @class = "form-control m-select2 f-selectT", @style = "width:40%;margin-left:15px;"})
+    </div>
+</div>
+
+<div class="input-group row" style="margin-left:15px;">
+    <label for="EmployeeId" class="col-2 col-form-label" style="margin-top:4px;">Выбор сотрудников</label>
+    <div class="col-md-10" style="margin-bottom:15px; margin-top:5px;">
+        <select class="form-control m-select2 select2-hidden-accessible" id="EmployeeId" style="width:20%;margin-left:15px;">
+            <option value="" selected="selected"></option>
+        </select>
+        <button onclick="AddEmployee()" style="margin-left:5px; font-size:15px; width:200px;" class="btn btn-primary">
+            <span>
+                <i class="fa flaticon-users"></i>
+                <span>Добавить сотрудника</span>
+            </span>
+        </button>
+    </div>
+</div>
+
+<table class="table table-bordered col-md-10" id="TableEmployeeItems">
+    <thead>
+        <tr>
+            <th style="width: 20%; text-align:center;">
+                ФИО
+            </th>
+            <th style="width: 20%; text-align:center;">
+                Должность
+            </th>
+            <th style="width: 20%; text-align:center;">
+                Дивизион
+            </th>
+            <th style="width: 20%; text-align:center;">
+                Линейный руководитель
+            </th>
+            <th style="width: 5%; text-align:center;">Удалить</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr id="Row-dd0bb" style="display: none;">
+            <td class="form-group"><input id="FullName-dd0bb" name="FullName-dd0bb" value="" class="form-control" /></td>
+            <td class="form-group"><input id="Position-dd0bb" name="Position-dd0bb" value="" class="form-control" /></td>
+            <td class="form-group"><input id="Division-dd0bb" name="Division-dd0bb" value="1" class="form-control" /></td>
+            <td class="form-group"><input id="LM-dd0bb" name="LM-dd0bb" value="" class="form-control input-xsmall " /></td>
+            <td><button onclick="DeleteEmployee('dd0bb'); return false; " class=" btn btn-danger"><i class="fa fa-trash"></i></button></td>
+        </tr>
+
+        @if (Model.empItems != null)
+        {
+            foreach (var item in Model.empItems)
+            {
+                
+
+                if (Model.Out != 1) {
+                    <tr id="Row-@item.AttestationItemId">
+                        @{
+                            var user = users.FirstOrDefault(s => s.UserId == item.UserID);
+                            var posName = positions.FirstOrDefault(x => x.PositionId == user.JobTitleId).NameRu;
+                            var LMUserName = users.FirstOrDefault(s => s.UserId == user.LineManagerUserId).NameRu;
+                            var divName = division.FirstOrDefault(x => x.DivisionId == user.DivisionId).NameRu;
+                        }
+                        <td class="form-group"><input disabled id="FullName-@item.AttestationItemId" name="FullName-@item.AttestationItemId" value="@user.NameRu" class="form-control" /></td>
+                        <td class="form-group"><input disabled id="Position-@item.AttestationItemId" name="Position-@item.AttestationItemId" value="@posName" class="form-control" /></td>
+                        <td class="form-group"><input disabled id="Division-@item.AttestationItemId" name="Division-@item.AttestationItemId" value="@divName" class="form-control" /></td>
+                        <td class="form-group"><input disabled id="LM-@item.AttestationItemId" name="LM-@item.AttestationItemId" value="@LMUserName" class="form-control input-xsmall " /></td>
+                        <td><button onclick="DeleteEmployee('@item.AttestationItemId'); return false; " class=" btn btn-danger"><i class="fa fa-trash"></i></button></td>
+                    </tr>
+                        }else{
+                        var user2 = users.FirstOrDefault(s => s.UserId == item.UserID);
+                        <tr id="Row-@item.AttestationItemId">
+                            <td class="form-group"><input disabled id="FullName-@item.AttestationItemId" name="FullName-@item.AttestationItemId" value="@user2.NameRu" class="form-control" /></td>
+                            <td class="form-group"></td>
+                            <td class="form-group"></td>
+                            <td class="form-group"></td>
+                            <td><button onclick="DeleteEmployee('@item.AttestationItemId'); return false; " class=" btn btn-danger"><i class="fa fa-trash"></i></button></td>
+                        </tr>
+
+                     }
+            }
+        }
+    </tbody>
+</table>
+
+
+
+@section Styles{
+    <link href="~/Content/css/select2.css" rel="stylesheet" />
+}
+
+@section Scripts{
+    <script src="~/Scripts/select2.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            $(".f-selectT").select2({
+                placeholder: "Select an option",
+                text: "Select an option"
+            });
+
+            var items = @Model.empItems.Count();
+
+            if (items > 0) {
+                $('#BtnDelete').show();
+            }
+
+            $('#submitForm').click(function () {
+                var form1 = $('#CertificationForm');
+                $("#CertificationForm").validate({
+                    // define validation rules
+                    rules: {
+                        CertificationName: {
+                            required: true,
+
+                        },
+                        CertificationStartTime: {
+                            required: true,
+
+                        },
+                        CertificationEndTime: {
+                            required: true,
+
+                        },
+                        TemplateId: {
+                            required: true,
+
+                        },
+
+                        ManagerId: {
+                            required: true,
+
+                        },
+                        Level: {
+                            required: true,
+                            digits: true
+                        },
+                        LeveltoPass: {
+                            required: true,
+                            digits: true
+                        }
+
+                    },
+
+                    //display error alert on form submit
+                    invalidHandler: function (event, validator) {
+                        var alert = $('#CertificationForm_msg');
+                        alert.removeClass('m--hide').show();
+                        mUtil.scrollTop();
+                    },
+
+                    submitHandler: function (form1) {
+                        form1.submit();
+                    }
+                });
+            });
+
+            var arrows;
+            if (mUtil.isRTL()) {
+                arrows = {
+                    leftArrow: '<i class="la la-angle-right"></i>',
+                    rightArrow: '<i class="la la-angle-left"></i>'
+                }
+            } else {
+                arrows = {
+                    leftArrow: '<i class="la la-angle-left"></i>',
+                    rightArrow: '<i class="la la-angle-right"></i>'
+                }
+            }
+
+
+            var today = new Date();
+            var dd = today.getDate();
+            $('#CertificationStartDate').datetimepicker({
+                todayHighlight: true,
+                autoclose: true,
+                minDate: 0,
+                format: 'dd.mm.yyyy hh:ii'
+            });
+
+            $('#CertificationStartDate_modal').datetimepicker({
+                todayHighlight: true,
+                autoclose: true,
+                minDate: 0,
+                format: 'dd.mm.yyyy hh:ii'
+            });
+
+            $('#CertificationEndDate').datetimepicker({
+                todayHighlight: true,
+                autoclose: true,
+                format: 'dd.mm.yyyy hh:ii'
+            });
+
+            $('#CertificationEndDate_modal').datetimepicker({
+                todayHighlight: true,
+                autoclose: true,
+                format: 'dd.mm.yyyy hh:ii'
+            });
+
+            $('#btnSave').click(function () {
+                var serialized = $("#CertificationForm").serialize();
+                $.post('/TTS/SaveCertification', serialized, function (data) {
+                    if (data == 'ok') {
+                        window.location.href = '/TTS/CertificationCalendar';
+                    }
+                })
+            });
+
+            $('#Cancel').click(function () {
+                window.location.href = '/TTS/CertificationCalendar?tabs=1'
+            });
+        });
+
+        $('#EmployeeId').select2({
+            ajax: {
+                url: "/TTS/GetUserOut",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        page: params.page,
+
+                    };
+                },
+                processResults: function (data, params) {
+
+                    var dataC = $.map(data.emp, function (obj) {
+                        obj.id = obj.id || obj.UserId; // replace pk with your identifier
+
+                        return obj;
+                    });
+
+                    return { results: dataC };
+                },
+                cache: false
+            },
+            placeholder: '',
+            //id: function (item) { return item.CustomerId },
+            // text: function (item) { return item.Name },
+            escapeMarkup: function (markup) { return markup },
+            minimumInputLength: 3,
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+
+        $('#CertificationTemplate').select2({
+            ajax: {
+                url: "/TTS/GetTemplate",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        page: params.page,
+
+                    };
+                },
+                processResults: function (data, params) {
+
+                    var dataC = $.map(data.tempArr, function (obj) {
+                        obj.id = obj.id || obj.TestTemplateId; // replace pk with your identifier
+
+                        return obj;
+                    });
+
+                    return { results: dataC };
+                },
+                cache: false
+            },
+            placeholder: '',
+            //id: function (item) { return item.CustomerId },
+            // text: function (item) { return item.Name },
+            escapeMarkup: function (markup) { return markup },
+            minimumInputLength: 3,
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+
+        $('#CertificationTemplate').on('select2:change', function () {
+            validator.element($(this)); // validate element
+        });
+
+          @if(template != null)
+           {
+                <text> $("#select2-CertificationTemplate-container").html("@template.NameRu");</text>
+                <text> $("#TemplateOption").val(@Model.TestTemplateId)</text>
+           }
+
+
+        $('#FeedbackTemplate').select2({
+            ajax: {
+                url: "/TTS/GetFeedbackTemplate",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        page: params.page,
+                    };
+                },
+                processResults: function (data, params) {
+
+                    var dataC = $.map(data.tempArr, function (obj) {
+                        obj.id = obj.id || obj.FeedTemplateId; // replace pk with your identifier
+
+                        return obj;
+                    });
+
+                    return { results: dataC };
+                },
+                cache: false
+            },
+            placeholder: '',
+            //id: function (item) { return item.CustomerId },
+            // text: function (item) { return item.Name },
+            escapeMarkup: function (markup) { return markup },
+            minimumInputLength: 3,
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+
+        $('#FeedbackTemplate').on('select2:change', function () {
+            validator.element($(this)); // validate element
+        });
+
+        @if(feedback != null)
+           {
+               <text> $("#select2-FeedbackTemplate-container").html("@feedback.NameRu");</text>
+               <text> $("#FeedbackTemplateOption").val(@Model.FeedbackId)</text>
+           }
+
+        $('#ManagerId').select2({
+            ajax: {
+                url: "/TTS/GetUser",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        page: params.page,
+
+                    };
+                },
+                processResults: function (data, params) {
+
+                    var dataC = $.map(data.emp, function (obj) {
+                        obj.id = obj.id || obj.UserId; // replace pk with your identifier
+
+                        return obj;
+                    });
+
+                    return { results: dataC };
+                },
+                cache: false
+            },
+            placeholder: '',
+            //id: function (item) { return item.CustomerId },
+            // text: function (item) { return item.Name },
+            escapeMarkup: function (markup) { return markup },
+            minimumInputLength: 3,
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+
+
+        @if(manager != null)
+        {
+            <text>$("#select2-ManagerId-container").html("@manager.NameRu");</text>
+            <text>$('#LMManagerOptionId').val(@Model.LMUserId)</text>
+        }
+
+
+        function formatRepo(model) {
+            return model.Name;
+        }
+
+        function formatRepoSelection(model) {
+            return model.Name;
+        }
+
+        function FillTheRow(row) {
+            $("#FullName-" + row.rowNumber).val(row.userName).attr('disabled', 'disabled');
+            $("#Position-" + row.rowNumber).val(row.positionName).attr('disabled', 'disabled');
+            $("#Division-" + row.rowNumber).val(row.divisionName).attr('disabled', 'disabled');
+            $("#LM-" + row.rowNumber).val(row.LMUserName).attr('disabled', 'disabled');
+        }
+
+        function AddEmployee() {
+            mApp.blockPage('.page-content');
+            $.ajax({
+                type: "POST",
+                url: "/TTS/AddNewEmployeeItemToCertificationOut",
+                data: { UserId: $('#EmployeeId').val(), attestId: @Model.AttestationId },
+                success: function (data) {
+                    debugger
+                    if (data != "Error") {
+                        var row = data;
+                        var $cloned = $("#Row-dd0bb").clone().show();
+                        $cloned.attr('id', 'Row-' + row.rowNumber);
+                        $cloned.html($cloned.html().split("dd0bb").join(row.rowNumber));
+                        $('#TableEmployeeItems  tbody').append($cloned);
+                        mApp.unblockPage('.page-content');
+
+                        FillTheRow(row);
+                    } else {
+                        alert('error');
+                    }
+                },
+                error: function () {
+                    alert('Error');
+                    mApp.unblockPage('.page-content');
+                }
+            });
+        }
+
+        function DeleteEmployee(id) {
+            mApp.blockPage('.page-content');
+                $.ajax({
+                        type: "POST",
+                        url: "/TTS/DeleteEmployeeItem",
+                        data: { id: id },
+                        success: function (data) {
+
+                            if (data != "error") {
+                                $('#Row-' + id).remove();
+                                mApp.unblockPage('.page-content');
+                            } else {
+                                alert('error');
+                                mApp.unblockPage('.page-content');
+                            }
+                        },
+                        error: function () {
+                            alert('error');
+                            mApp.unblockPage('.page-content');
+                        }
+                });
+        }
+
+    </script>
+
+
+
+}

@@ -1,0 +1,271 @@
+﻿@*@model  List<TTS.Models.TreeRootView>
+@using TTS.Models;
+@{
+    ViewBag.Title = "Категории";
+}
+
+<script type="text/javascript"
+        src="~/Scripts/dummy.js"></script>
+
+<style type="text/css">
+    .demo-tree {
+        width: 50%;
+    }
+
+    .filter-field {
+        display: block;
+        width: 100%;
+        padding: 3px;
+    }
+
+    .events-table {
+        width: 100%;
+        margin-top: 15px;
+    }
+
+    .events-table-header {
+        padding: 8px;
+        line-height: 1.42857143;
+        vertical-align: top;
+        background-color: #fff;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .events-table .event:nth-of-type(odd) {
+        background-color: #f9f9f9;
+    }
+
+    .events-table .event {
+        padding: 8px;
+        line-height: 1.42857143;
+        vertical-align: top;
+        border-top: 1px solid #ddd;
+        display: flex;
+    }
+
+        .events-table .event > span,
+        .events-table-header > span {
+            flex-basis: 25%;
+        }
+
+    .fade-enter-active, .fade-leave-active {
+        transition: opacity .8s;
+    }
+
+    .fade-enter, .fade-leave-to {
+        opacity: 0;
+    }
+
+    .node-controls a {
+        color: #ff14ce
+    }
+</style>
+<!-- TODO: Missing CoffeeScript 2 -->
+
+<script type="text/javascript">
+    var data = [
+        [
+            { "text": "Who Should Read This Book?" },
+            { "text": "How to Read This Book" },
+            { "text": "What’s in This Book?" },
+            { "text": "Have Fun!" }
+        ],
+        [
+            { "text": "Naming Variables" },
+            { "text": "Creating New Variables Using Math", "state": { "disabled": true } },
+            { "text": "Incrementing and Decrementing" },
+            { "text": "+= (plus-equals) and –= (minus-equals)" }
+        ],
+        [
+            { "text": "Interactive Programming" },
+            {
+                "text": "Find the Buried Treasure!", "state": { "disabled": true, "expanded": true }, "children": [
+                    { "text": "#1: A Snowman-Drawing Function" },
+                    { "text": "#2: Drawing an Array of Points" },
+                    { "text": "#3: Painting with Your Mouse" },
+                    { "text": "#4: Drawing the Man in Hangman" }
+                ]
+            },
+            { "text": "Object-Oriented Programming" }
+        ]
+
+    ]
+
+</script>
+
+<!-- first import Vue -->
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/liquor-tree"></script>
+
+<div id="app">
+    <div class="examples">
+        <div class="example">
+            <div class="example-description">
+                <input type="text" placeholder="Type to filter..." v-model="filter" class="filter-field">
+            </div>
+            <div class="example-tree">
+                <tree :data="data" :options="opts" :filter="filter" ref="tree" @@node:checked="">
+                    <div slot-scope="{ node }" class="node-container">
+                        <div class="node-text">{{ node.text }}</div>
+                        <div class="node-controls">
+                            <a href="#" v-on:mouseup.stop="editNode(node)">✎</a>
+                            <a href="#" v-on:mouseup.stop="removeNode(node)">-</a>
+                            <a href="#" v-on:mouseup.stop="addChildNode(node)">+</a>
+                        </div>
+                    </div>
+                </tree>
+            </div>
+        </div>
+
+        <div class="example">
+            <div class="example-description">
+                List of tree events. Open console to details.
+            </div>
+
+            <div class="events-table">
+                <div class="events-table-header">
+                    <span>Event Name</span>
+                    <span>Event Args</span>
+                    <span>Node Name</span>
+                    <span>Timestamp</span>
+                </div>
+
+                <transition-group name="fade" tag="div" class="events-table-body">
+                    <div :key="e.id" v-for="e in eventsList" class="event">
+                        <span><b>{{ e.name }}</b></span>
+                        <span>{{ e.args }}</span>
+                        <span>{{ e.nodeText }}</span>
+                        <span>{{ e.time | time }}</span>
+                    </div>
+                </transition-group>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const eventsList = [
+        { name: 'tree:mounted', args: ['Tree Component'] },
+        { name: 'tree:filtered', args: ['Matches', 'Filter String'] },
+        { name: 'tree:data:fetch', args: ['Parent Node'] },
+        { name: 'tree:data:received', args: ['Parent Node'] },
+
+        { name: 'node:disabled', args: ['Node'] },
+        { name: 'node:enabled', args: ['Node'] },
+        { name: 'node:shown', args: ['Node'] },
+        { name: 'node:hidden', args: ['Node'] },
+        { name: 'node:dblclick', args: ['Node'] },
+        /*{ name: 'node:selected', args: ['Node'] }, */
+        { name: 'node:unselected', args: ['Node'] },
+        { name: 'node:checked', args: ['Node'] },
+        { name: 'node:unchecked', args: ['Node'] },
+        { name: 'node:expanded', args: ['Node'] },
+        { name: 'node:collapsed', args: ['Node'] },
+        { name: 'node:added', args: ['Node', 'New Node'] },
+        { name: 'node:removed', args: ['Node'] },
+        { name: 'node:text:changed', args: ['Node', 'New Text', 'Old Text'] },
+
+        { name: 'node:editing:start', args: ['Node'] },
+        { name: 'node:editing:stop', args: ['Node', 'isTextChanged'] },
+    ]
+
+    let key = 0
+
+    new Vue({
+        el: '#app',
+        data: () => ({
+            events: [],
+
+            data: getData(),
+            filter: null,
+            opts: {
+                fetchData: (node) => {
+                    return Promise.resolve(data[node.id - 1])
+                },
+                checkbox: true
+            }
+        }),
+
+        filters: {
+            time(time) {
+                return +time
+            }
+        },
+
+        computed: {
+            eventsList() {
+                return this.events.concat().reverse()
+            }
+        },
+
+        mounted() {
+            eventsList.forEach(e => {
+                this.$refs.tree.$on(e.name, this.initEventViewer(e))
+            })
+        },
+
+        methods: {
+            editNode(node, e) {
+                node.startEditing()
+            },
+
+            removeNode(node) {
+                if (confirm('Are you sure?')) {
+                    node.remove()
+                }
+            },
+
+            addChildNode(node) {
+                if (node.enabled()) {
+                    node.append('New Node')
+                }
+            },
+
+            initEventViewer(event) {
+                const events = this.events
+
+                return function (node, newNode) {
+                    let nodeText = '-'
+                    let targetNode = newNode && newNode.text ? newNode : node
+
+                    if (targetNode && targetNode.text) {
+                        nodeText = targetNode.text
+                    }
+
+                    events.push(
+                        Object.assign(
+                            {},
+                            event,
+                            { time: new Date, nodeText, id: key++ }
+                        )
+                    )
+
+                    console.log(event, arguments)
+                }
+            }
+        }
+    })
+
+    function getData() {
+        return new Promise(resolve => {
+            setTimeout(_ => {
+                resolve(@Html.Raw(Json.Encode(Model))
+                )
+            }, 100)
+        })
+    }
+</script>
+
+<script>
+    // tell the embed parent frame the height of the content
+    if (window.parent && window.parent.parent) {
+        window.parent.parent.postMessage(["resultsFrame", {
+            height: document.body.getBoundingClientRect().height,
+            slug: "cuseo1j7"
+        }], "*")
+    }
+</script>*@
+

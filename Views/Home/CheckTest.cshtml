@@ -1,0 +1,111 @@
+﻿@model IEnumerable<TTS.Models.ViewTextAnswers>
+@using TTS.Models;
+
+@{
+    ViewBag.Title = "Текстовые ответы";
+    ViewBag.Description = "";
+
+    var attestationName = ViewBag.AttestationName;
+    var userName = ViewBag.UserName;
+    var attestationId = ViewBag.AttestationId;
+    var testId = ViewBag.TestId;
+}
+<h1>@attestationName</h1>
+<h2>@userName</h2>
+<div  id="Table">
+    <table class="table table-bordered m-table" border="1">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Вопрос</th>
+                <th>Ответ на вопрос</th>
+                <th>Оценка</th>
+            </tr>
+        </thead>
+        <tr v-for="(q, index) in questionList">
+            <td>{{q.QuestionId}}</td>
+            <td width="50%">
+                <p>{{q.QuestionRu}}</p>
+                <p v-for="(p, index_P) in q.PictureList">
+                    <img style="max-width:100%" v-bind:src="'/images?id='+p" />
+                </p>
+            </td>
+            <td>{{q.Answers}}</td>
+            <td>
+                <input class="form-control m-input" v-on:change="saveTextMark(index)" v-model="q.ManagerMark" type="number" value="0" id="example-number-input" max="5" min="0" style="min-width:100px;">           
+            </td>
+        </tr>
+    </table>
+    <div class="info">
+        <div class="pull-right">
+            <span class="">{{counter}}% </span> <button id="" class="btn btn-success " v-on:click="SummTextAnswers(counter)">Сохранить</button>
+        </div>   
+    </div>
+</div>
+
+@section Styles {
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+}
+@section Scripts {
+    <script src="~/Scripts/axios.min.js"></script>
+    <script>
+        var vm = new Vue({
+            el: '#Table',
+            data: {
+                questionList:@Html.Raw(Json.Encode(Model)),
+            },
+            computed: {
+                counter: {
+                    get: function () {
+                        var dlina = this.questionList.length;
+                        var max = 5;
+                        var maxsumm = 0;
+                        //alert(dlina);
+                        var count = 0;
+                        for (var i = 0; i < dlina; i++) {
+                            var mark = parseInt(this.questionList[i].ManagerMark) || 0;
+                            count = count + mark;
+                            console.log(count);
+                        }
+                        maxsumm = dlina * max
+                        count = (count / maxsumm) *100;
+                        return count.toFixed(2)
+                    },
+                },
+
+            },
+            methods: {
+                saveTextMark: function (index) {
+                    //alert(this.questionList[index].TextAnswer);
+                    var mark = this.questionList[index].ManagerMark;
+                    axios.post('/AJAX/SaveTextMark/', {
+                        qid: this.questionList[index].QuestionId, mark: mark,
+                        attestationId: @attestationId, testId:  @testId,
+                    }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    }).then(response => {
+                    }).catch(error => {
+                        alert('Error');
+                    });
+                },
+                SummTextAnswers: function (counter) {
+                    //alert(counter);
+                    axios.post('/AJAX/SummTextAnswers/', {
+                        summ: counter, attestationId: @attestationId, testId: @testId,
+                    }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                        }).then(response => {
+                            alert("Результат сохранен");
+                    }).catch(error => {
+                        alert('Error');
+                    });
+                },
+            }
+        });
+    </script>
+}

@@ -1,0 +1,518 @@
+﻿@model  IEnumerable<TTS.Models.Attestation>
+@using TTS.Models
+@using PagedList;
+@using PagedList.Mvc
+
+@{
+    ViewBag.Title = "Календарь аттестаций";
+
+    int tabs = ViewBag.tabs;
+    IEnumerable<TestTemplate> templates = ViewBag.Templates;
+    IEnumerable<L_User> users = ViewBag.Users;
+    var attestation = ViewBag.Attestation;
+    var testTemplateName = ViewBag.TestTemplate;
+    var manager = ViewBag.ManagerName;
+    L_User appUser = ViewBag.AppUser;
+    var isOneOfSeven = (bool)ViewBag.IsOneOfSeven;
+    var isLM = (bool)ViewBag.IsLM;
+    var sa = (bool)ViewBag.sa;
+    var createdBy = ViewBag.CreatedBy;
+}
+
+<div class="m-portlet m-portlet--bordered m-portlet--rounded  m-portlet--last">
+    <div class="m-portlet__head">
+        <div class="m-portlet__head-caption">
+            <div class="m-portlet__head-title">
+                <h3 class="m-portlet__head-text">
+                    Аттестации
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="m-portlet__body">
+        <ul class="nav nav-tabs  m-tabs-line m-tabs-line--primary" role="tablist">
+            <li class="nav-item m-tabs__item active">
+                <span onclick="window.location='/TTS/CertificationCalendar?tabs='+ 0" @if (tabs == 0) { <text> class="nav-link m-tabs__link active show" </text> } style="cursor:pointer;" role="tab" data-toggle="tab">Назначенные</span>
+            </li>
+            @if (!isLM)
+            {
+                <li class="nav-item m-tabs__item">
+                    <span onclick="window.location='/TTS/CertificationCalendar?tabs='+ 1" @if (tabs == 1) { <text> class="nav-link m-tabs__link active show" </text> } style="cursor:pointer;" role="tab" data-toggle="tab">Неопубликованные</span>
+                </li>
+            }
+            @if (isLM || (isOneOfSeven || sa))
+            {
+                <li class="nav-item m-tabs__item">
+                    <span onclick="window.location='/TTS/CertificationCalendar?tabs='+ 1" @if (tabs == 1) { <text> class="nav-link m-tabs__link active show" </text> } style="cursor:pointer;" role="tab" data-toggle="tab">Неопубликованные</span>
+                </li>
+            }
+            <li class="nav-item m-tabs__item">
+                <span onclick="window.location='/TTS/CertificationCalendar?tabs='+ 2" @if (tabs == 2) { <text> class="nav-link m-tabs__link active show" </text> } style="cursor:pointer;" role="tab" data-toggle="tab">Завершенные</span>
+            </li>
+        </ul>
+        <form id="FilterForm" action="/TTS/CertificationCalendar" method="get">
+            <input type="hidden" name="tabs" value="@tabs" />
+            <table class="table table-bordered col-md-12" id="">
+                <thead>
+                    <tr>
+                        <th style="width:15%; vertical-align:top; text-align:center;">
+                            <div style="margin-bottom:3px;">
+                                <label for="CertificationName">Название атестации</label>
+                                <select class="form-control m-select2 select2-hidden-accessible" id="CertificationName" name="CertificationName" style="width:100%;">
+                                    <option value="" selected="selected"></option>
+                                </select>
+                            </div>
+                        </th>
+                        <th style="width:15%; vertical-align:top; text-align:center;">
+                            <div style="margin-bottom:3px;">
+                                <label for="CertificationCreator">Аттестация создана:</label>
+                                <select class="form-control m-select2 select2-hidden-accessible" id="CertificationCreator" name="CertificationCreator" style="width:100%;">
+                                    <option value="" selected="selected"></option>
+                                </select>
+                            </div>
+                        </th>
+                        <th style="width:20%; text-align:center;">
+                            <label for="StartCertTime">Дата начала</label>
+                            <div class="form-group row" style="margin-bottom:0px;">
+                                <input type="text" placeholder="с" autocomplete="off" value="@Request.QueryString["StartDate"]" class="form-control form-filter" id="StartDate" name="StartDate" data-date-format="dd.mm.yyyy" style="margin-right:3px; margin-top:7px; margin-left:20px; width:38%; cursor: pointer !important">
+                                <input type="text" placeholder="по" autocomplete="off" value="@Request.QueryString["FinishDate"]" class="form-control form-filter" id="FinishDate" name="FinishDate" data-date-format="dd.mm.yyyy" style="margin:3px; margin-top:7px; width:38%;cursor: pointer !important">
+                                <button onclick="SendStartTimeRange(); return false; " style="margin-top:11px; margin-left:2px;" class="btn btn-outline-accent m-btn m-btn--icon m-btn--icon-only m-btn--outline-2x"><i class="flaticon-clock-1"></i></button>
+                            </div>
+                        </th>
+                        <th style="width:20%; text-align:center;">
+                            <label for="EndCertTime">Дата окончания</label>
+                            <div class="form-group row" style="margin-bottom:0px;">
+                                <input type="text" placeholder="с" autocomplete="off" value="@Request.QueryString["StartEndDate"]" class="form-control form-filter" id="StartEndDate" name="StartEndDate" data-date-format="dd.mm.yyyy" style="margin-right:3px; margin-top:7px; margin-left:20px; width:38%; cursor: pointer !important">
+                                <input type="text" placeholder="по" autocomplete="off" value="@Request.QueryString["FinishEndDate"]" class="form-control form-filter" id="FinishEndDate" name="FinishEndDate" data-date-format="dd.mm.yyyy" style="margin:3px; margin-top:7px; width:38%;cursor: pointer !important">
+                                <button onclick="SendFinishTimeRange(); return false; " style="margin-top:11px; margin-left:2px;" class="btn btn-outline-accent m-btn m-btn--icon m-btn--icon-only m-btn--outline-2x"><i class="flaticon-clock-1"></i></button>
+                            </div>
+
+                        </th>
+                        <th style="width:15%; vertical-align:top; text-align:center;">
+                            <div style="margin-bottom:3px;">
+                                <label for="CertificationTemplate">Шаблон аттестации</label>
+                                <select class="form-control m-select2 select2-hidden-accessible" id="CertificationTemplate" name="CertificationTemplate" style="width:100%;">
+                                    <option value="" selected="selected"></option>
+                                </select>
+                            </div>
+                        </th>
+                        <th style="width:15%; vertical-align:top; text-align:center;">
+                            <div style="margin-bottom:3px;">
+                                <label for="CertificationManager">Линейный руководитель</label>
+                                <select class="form-control m-select2 select2-hidden-accessible" id="CertificationManager" name="CertificationManager" style="width:100%;">
+                                    <option value="" selected="selected"></option>
+                                </select>
+                            </div>
+                        </th>
+
+                        @if (tabs == 0)
+                        {
+                            <th style="width:12%; text-align:center; vertical-align:top;">
+                                <div style="margin-bottom:3px;">
+                                    <label>Управление</label>
+                                </div>
+                            </th>
+                        }
+
+                        @if (tabs == 1)
+                        {
+                            <th style="width:3%; text-align:center; vertical-align:top;">
+                                <div style="margin-bottom:3px;">
+                                    <label>Управление</label>
+                                </div>
+                            </th>
+                        }
+
+                        @if (tabs == 2)
+                        {
+                            <th style="width:3%; text-align:center; vertical-align:top;">
+                                <div style="margin-bottom:3px;">
+                                    <label>Управление</label>
+                                </div>
+                            </th>
+                        }
+
+
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @if (tabs >= 0)
+                    {
+                        foreach (var item in Model)
+                        {
+                            var Creator = "";
+                            if (item.CreatedBy != 12)
+                            {
+                                var thisUser = users.FirstOrDefault(f => f.UserId == item.CreatedBy);
+                                if (thisUser != null)
+                                {
+                                    Creator = thisUser.NameRu;
+                                }
+
+                            }
+
+                            <tr>
+                                <td style="text-align:center;">@item.AttestationName</td>
+                                <td style="text-align:center;">@Creator</td>
+                                <td style="text-align:center;">@String.Format("{0:dd.MM.yyyy}", item.StartTime)</td>
+                                <td style="text-align:center;">@String.Format("{0:dd.MM.yyyy}", item.FinishTime)</td>
+                                <td style="text-align:center;">
+                                    @{
+                                        var template = templates.FirstOrDefault(s => s.TestTemplateId == item.TestTemplateId);
+                                        if (template != null)
+                                        {
+                                            <text>@template.NameRu</text>
+                                        }
+                                    }
+                                </td>
+                                <td style="text-align:center;">
+                                    @{
+                                        var lm = users.FirstOrDefault(s => s.UserId == item.LMUserId);
+                                        if (lm != null)
+                                        {
+                                            <text>@lm.NameRu</text>
+                                        }
+                                    }
+                                </td>
+                                @if (tabs == 1)
+                                {
+                                    <td style="text-align:center; padding-top:0">
+                                        @if (appUser.UserId == item.CreatedBy)
+                                        {
+                                            <a data-toggle="m-tooltip" data-placement="top" title="" data-original-title="Редактировать" href="javascript:;" onclick="Edit(@item.AttestationId, @item.Out)" style="margin-top:11px; margin-left:5px;" class="btn btn-outline-warning m-btn m-btn--icon m-btn--icon-only m-btn--outline-2x">
+                                                <i class="flaticon-edit"></i>
+                                            </a>
+                                            <a data-toggle="m-tooltip" data-placement="top" title="" data-original-title="Удалить аттестацию" onclick="DeleteCertification(@item.AttestationId); return false; " style="margin-top:11px; margin-left:5px;"
+                                               class="btn btn-outline-danger m-btn m-btn--icon m-btn--icon-only m-btn--outline-2x">
+                                                <i class="flaticon-delete"></i>
+                                            </a>
+                                        }
+                                    </td>
+                                }
+                                @if (tabs == 0)
+                                {
+                                    <td style="text-align:left; padding-top:0">
+
+                                        @if (item.empItems.Where(x => x.ManagerApprove == false).Count() != 0 && isLM)
+                                        {
+                                            <a data-toggle="m-tooltip" data-placement="top" title="" data-original-title="Подтвердить участников аттестации" onclick="ApproveCertificationParticipants(@item.AttestationId); return false; " style="margin-top:11px; margin-left:5px;"
+                                               class="btn btn-outline-accent m-btn m-btn--icon m-btn--icon-only m-btn--outline-2x">
+                                                <i class="flaticon-user-add"></i>
+                                            </a>
+
+                                        }
+
+                                        @if (appUser.UserId == item.CreatedBy || isOneOfSeven)
+                                        {
+                                            <a data-toggle="m-tooltip" data-placement="top" title="" data-original-title="Редактировать" href="javascript:;" onclick="Edit(@item.AttestationId, @item.Out)" style="margin-top:11px; margin-left:5px;" class="btn btn-outline-warning m-btn m-btn--icon m-btn--icon-only m-btn--outline-2x">
+                                                <i class="flaticon-edit"></i>
+                                            </a>
+
+                                            <a data-toggle="m-tooltip" data-placement="top" title="" data-original-title="Дублировать аттестацию" onclick="DublicateCertification(@item.AttestationId, @tabs); return false; " style="margin-top:11px; margin-left:5px;"
+                                               class="btn btn-outline-info m-btn m-btn--icon m-btn--icon-only m-btn--outline-2x">
+                                                <i class="flaticon-add"></i>
+                                            </a>
+
+                                            <a data-toggle="m-tooltip" data-placement="top" title="" data-original-title="Удалить аттестацию" onclick="DeleteCertification(@item.AttestationId); return false; " style="margin-top:11px; margin-left:5px;"
+                                               class="btn btn-outline-danger m-btn m-btn--icon m-btn--icon-only m-btn--outline-2x">
+                                                <i class="flaticon-delete"></i>
+                                            </a>
+                                        }
+
+                                    </td>
+
+                                }
+
+                                @if (tabs == 2)
+                                {
+                                    <td style="text-align:left; padding-top:0">
+                                        <a data-toggle="m-tooltip" data-placement="top" title="" data-original-title="Дублировать аттестацию" onclick="DublicateCertification(@item.AttestationId, @tabs); return false; " style="margin-top:11px; margin-left:5px;"
+                                           class="btn btn-outline-info m-btn m-btn--icon m-btn--icon-only m-btn--outline-2x">
+                                            <i class="flaticon-add"></i>
+                                        </a>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+
+            </table>
+        </form>
+        @Html.PagedListPager((IPagedList)Model, page => Url.Action("CertificationCalendar", new { page, tabs }))
+    </div>
+</div>
+
+@section Styles {
+    <link href="~/Content/PagedList.css" rel="stylesheet" />
+}
+
+@section Scripts{
+
+    <script>
+        function Edit(id, out) {
+            if (out == 1) {
+                var url = '/TTS/CreateCertificationOut?id=' + id;
+            } else {
+                var url = '/TTS/CreateCertification?id=' + id;
+            }
+
+            //var doc = document.URL;
+            //$(location).attr('href', url);
+            window.location = url;
+            //$.get("/TTS/CreateCertification", { id: id });
+        }
+
+        function ApproveCertificationParticipants(id) {
+            window.location = '/TTS/ApproveCertificationParticipants?id=' + id;
+        }
+
+        function DublicateCertification(id, tabs) {
+            mApp.blockPage('.page-content');
+            $.ajax({
+                   type: "POST",
+                url: "/TTS/DublicateCertification",
+                data: { attestId: id, tabs: tabs },
+                     success: function (data) {
+                        if (data == "Success") {
+                            window.location.reload();
+                            //mApp.unblockPage('.page-content');
+                        }   else {
+                            alert('error');
+                        }
+                     },
+                   error: function () {
+                       alert('Error');
+                       mApp.unblockPage('.page-content');
+                   }
+            });
+        }
+
+        function DeleteCertification(id) {
+            var isDelete = confirm("Вы уверены что хотите удалить аттестацию?");
+            if (isDelete) {
+            mApp.blockPage('.page-content');
+            $.ajax({
+                type: "POST",
+                url: "/TTS/DeleteCertification",
+                data: { attId: id },
+                success: function (data) {
+                    if (data == "Success") {
+                        window.location.reload();
+                        //mApp.unblockPage('.page-content');
+                    } else {
+                        alert('error');
+                    }
+                },
+                error: function () {
+                    alert('Error');
+                    mApp.unblockPage('.page-content');
+                }
+                });
+            }
+        }
+
+        function formatRepo(model) {
+            return model.Name;
+        }
+
+        function formatRepoSelection(model) {
+            return model.Name;
+        }
+
+        $('#CertificationName').select2({
+            ajax: {
+                url: "/TTS/GetCertifacation",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        page: params.page,
+
+                    };
+                },
+                processResults: function (data, params) {
+
+                    var dataC = $.map(data.attArr, function (obj) {
+                        obj.id = obj.id || obj.AttestationId; // replace pk with your identifier
+
+                        return obj;
+                    });
+
+                    return { results: dataC };
+                },
+                cache: false
+            },
+            placeholder: '',
+            //id: function (item) { return item.CustomerId },
+            // text: function (item) { return item.Name },
+            escapeMarkup: function (markup) { return markup },
+            minimumInputLength: 3,
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+
+        $('#CertificationName').on('select2:select', function (e) {
+            var data = e.params.data;
+            window.location = '/TTS/CertificationCalendar?tabs=@tabs&AttestationId=' + data.AttestationId;
+
+        });
+
+        $("#select2-CertificationName-container").html("@attestation");
+
+        $('#CertificationCreator').select2({
+            ajax: {
+                url: "/TTS/GetCertificationCreator",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        page: params.page,
+                        tabs: @tabs,
+
+                    };
+                },
+                processResults: function (data, params) {
+
+                    var dataC = $.map(data.creatorArr, function (obj) {
+                        obj.id = obj.id || obj.CreatorId; // replace pk with your identifier
+
+                        return obj;
+                    });
+
+                    return { results: dataC };
+                },
+                cache: false
+            },
+            placeholder: '',
+            //id: function (item) { return item.CustomerId },
+            // text: function (item) { return item.Name },
+            escapeMarkup: function (markup) { return markup },
+            minimumInputLength: 3,
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+
+        $('#CertificationCreator').on('select2:select', function (e) {
+            var data = e.params.data;
+            window.location = '/TTS/CertificationCalendar?tabs=@tabs&CreatedBy=' + data.CreatorId;
+
+        });
+
+        $("#select2-CertificationCreator-container").html("@createdBy");
+
+        $('#CertificationTemplate').select2({
+            ajax: {
+                url: "/TTS/GetTemplate",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        page: params.page,
+                    };
+                },
+                processResults: function (data, params) {
+
+                    var dataC = $.map(data.tempArr, function (obj) {
+                        obj.id = obj.id || obj.TestTemplateId; // replace pk with your identifier
+
+                        return obj;
+                    });
+
+                    return { results: dataC };
+                },
+                cache: false
+            },
+            placeholder: '',
+            //id: function (item) { return item.CustomerId },
+            // text: function (item) { return item.Name },
+            escapeMarkup: function (markup) { return markup },
+            minimumInputLength: 3,
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+
+        $('#CertificationTemplate').on('select2:select', function (e) {
+            var data = e.params.data;
+            window.location = '/TTS/CertificationCalendar?tabs=@tabs&TestTemplateId=' + data.TestTemplateId;
+
+        });
+
+        $("#select2-CertificationTemplate-container").html("@testTemplateName");
+
+        $('#CertificationManager').select2({
+            ajax: {
+                url: "/TTS/GetUser",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        page: params.page,
+
+                    };
+                },
+                processResults: function (data, params) {
+
+                    var dataC = $.map(data.emp, function (obj) {
+                        obj.id = obj.id || obj.UserId; // replace pk with your identifier
+
+                        return obj;
+                    });
+
+                    return { results: dataC };
+                },
+                cache: false
+            },
+            placeholder: '',
+            //id: function (item) { return item.CustomerId },
+            // text: function (item) { return item.Name },
+            escapeMarkup: function (markup) { return markup },
+            minimumInputLength: 3,
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+
+        $('#CertificationManager').on('select2:select', function (e) {
+            var data = e.params.data;
+            window.location = '/TTS/CertificationCalendar?tabs=@tabs&ManagerId=' + data.UserId;
+
+        });
+
+        $("#select2-CertificationManager-container").html("@manager");
+
+
+        $('#StartDate').datepicker({
+            clearBtn: true
+        });
+        $('#FinishDate').datepicker({
+            clearBtn: true
+        });
+
+        $('#StartEndDate').datepicker({
+            clearBtn: true
+        });
+        $('#FinishEndDate').datepicker({
+            clearBtn: true
+        });
+
+        function SendStartTimeRange() {
+            $('#StartEndDate').val(null);
+            $('#FinishEndDate').val(null);
+            $('#FilterForm').submit();
+        }
+
+        function SendFinishTimeRange() {
+            $('#StartDate').val(null);
+            $('#FinishDate').val(null);
+            $('#FilterForm').submit();
+        }
+
+    </script>
+
+
+}

@@ -1,0 +1,175 @@
+﻿@model  TTS.Models.Attestation
+@using TTS.Models
+@{
+    ViewBag.Title = "Список участников аттестации";
+    IEnumerable<TTS.Models.L_User> users = ViewBag.AllUsers;
+    IEnumerable<TTS.Models.L_User> usersOut = ViewBag.AllUsersOut;
+
+    IEnumerable<TTS.Models.Position> positions = ViewBag.Positions;
+    IEnumerable<TTS.Models.Division> division = ViewBag.Division;
+    Attestation currAttestation = ViewBag.CurrentAttestation;
+    int Quantity = ViewBag.quantity;
+}
+
+<div class="m-portlet m-portlet--bordered m-portlet--rounded  m-portlet--last">
+    <div class="m-portlet__head">
+        <div class="m-portlet__head-caption">
+            <div class="m-portlet__head-title">
+                <h3 class="m-portlet__head-text">
+                    Подтвердить список участников аттестации
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="m-portlet__body">
+
+        <div class="form-group m-form__group col-4">
+            <label for="AttestationName">Название аттестации</label>
+            <input type="text" disabled class="form-control m-input m-input--solid" id="AttestationName" value="@currAttestation.AttestationName">
+        </div>
+        <div class="form-group m-form__group col-4">
+            <label for="StartPeriod">Дата начала</label>
+            <input type="text" disabled class="form-control m-input m-input--solid" id="StartPeriod" value="@currAttestation.StartTime">
+        </div>
+        <div class="form-group m-form__group col-4">
+            <label for="EndPeriod">Дата окончания</label>
+            <input type="text" disabled class="form-control m-input m-input--solid" id="EndPeriod" value="@currAttestation.FinishTime">
+        </div>
+        <div class="form-group m-form__group col-4">
+            <label for="ParticipantsCount">Количество участников</label>
+            <input type="text" disabled class="form-control m-input m-input--solid" id="ParticipantsCount" value="@Quantity">
+        </div>
+        <div class="form-group m-form__group col-4">
+            <label for="AttestationLevel">Уровень аттестации</label>
+            <input type="text" disabled class="form-control m-input m-input--solid" id="AttestationLevel" value="@currAttestation.CertificationLevelToPass">
+        </div>
+
+        <hr />
+        <div class="col-12" style="margin-bottom:5px;">
+            <input type="button" class="btn btn-success" onclick="AddCheckedItems()" value="Выбрать все" style="width:120px; margin-top:5px;margin-bottom:5px; margin-left:2px; font-size:15px; float:right" id="CheckAll" />
+            <input name="CancelCheked" value="Отменить все" type="button" onclick="RemoveCheckedItems()" class="btn btn-primary" id="CancelCheked" style="width:120px; margin-bottom:5px; margin-top:5px;  font-size:15px; float:right" />
+        </div>
+        <form action="/TTS/ApproveUsersToCertification" method="post">
+            <input type="hidden" name="CertificationId" value="@currAttestation.AttestationId" />
+            <table class="table table-bordered col-md-12" id="TableParticipantItems">
+                <thead>
+                    <tr>
+                        <th style="width: 30%; text-align:center;">
+                            ФИО
+                        </th>
+                        <th style="width: 30%; text-align:center;">
+                            Должность
+                        </th>
+                        <th style="width: 30%; text-align:center;">
+                            Дивизион
+                        </th>
+                        <th style="width: 5%; text-align:center;">
+                            Выбрать
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @if (currAttestation.empItems != null)
+                    {
+                        foreach (var item in currAttestation.empItems.Where(x => x.ManagerApprove != true))
+                        {
+
+                            var user = users.FirstOrDefault(s => s.UserId == item.UserID);
+                            var userOut = usersOut.FirstOrDefault(f => f.UserId == item.UserID);
+
+                            if (user != null && currAttestation.Out != 1)
+                            {
+                                <tr>
+                                    @{
+                                        var posName = positions.FirstOrDefault(x => x.PositionId == user.JobTitleId).NameRu;
+                                        var divName = division.FirstOrDefault(x => x.DivisionId == user.DivisionId).NameRu;
+                                    }
+
+                                    <td class="form-group"><input id="FullName-@item.AttestationItemId" value="@user.NameRu" class="form-control" disabled /></td>
+                                    <td class="form-group"><input id="Position-@item.AttestationItemId" value="@posName" class="form-control" disabled /></td>
+                                    <td class="form-group"><input id="Division-@item.AttestationItemId" value="@divName" class="form-control" disabled /></td>
+                                    <td>
+                                        <div style="margin-left:23px; margin-top:5px;" class="checker">
+                                            <label class="m-checkbox m-checkbox--check-bold m-checkbox--state-success">
+                                                <input type="checkbox" class="" value="@user.UserId" name="userId">
+                                                <span></span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }else 
+                            {
+                                if (userOut != null) {
+                                    <tr>
+                                        <td class="form-group"><input id="FullName-@item.AttestationItemId" value="@userOut.NameRu" class="form-control" disabled /></td>
+                                        <td class="form-group"></td>
+                                        <td class="form-group"></td>
+                                        <td>
+                                            <div style="margin-left:23px; margin-top:5px;" class="checker">
+                                                <label class="m-checkbox m-checkbox--check-bold m-checkbox--state-success">
+                                                    <input type="checkbox" class="" value="@userOut.UserId" name="userId">
+                                                    <span></span>
+                                                </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+
+                        }
+
+
+                    }
+                </tbody>
+            </table>
+            <div class="form-group m-form__group row" style="">
+                <div class="col-10" style="margin-top:2px;">
+                    <input name="Cancel" value="Отмена" class="btn btn-primary" id="btnCancel" style="width:200px; margin-right:2px; margin-top:5px; font-size:15px;" />
+                    <input type="submit" class="btn btn-success" value="Подтвердить" style="width:200px; margin-top:5px;  font-size:15px;" id="submitForm" />
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles{
+
+
+
+}
+
+@section Scripts{
+
+    <script>
+        document.getElementById("btnCancel").onclick = function () {
+            location.href = "/TTS/CertificationCalendar";
+        };
+        function AddCheckedItems() {
+            $("#CheckAll").click(function () {
+                $('.checker').find('span').addClass('checked');
+                $(':checkbox').prop('checked', true);
+            });
+        }
+        function RemoveCheckedItems() {
+            $("#CancelCheked").click(function () {
+                $('.checker').find('span').removeClass('checked');
+                $(':checkbox').prop('checked', false);
+            });
+        }
+
+
+
+
+    </script>
+
+
+
+
+
+
+
+
+}
+
+

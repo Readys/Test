@@ -1,0 +1,341 @@
+﻿@model  IEnumerable<TTS.Models.Tree>
+@{
+
+    ViewBag.Title = "Категории";
+
+    var Type = (int)ViewBag.Type;
+    var appUserId = ViewBag.AppUserId;
+
+    var tree = ViewBag.Tree;
+}
+
+
+<div class="portlet-body">
+    <div class="table-container">
+        <div class="tabbable-line">
+            <ul class="nav nav-tabs">
+                <li @if (Type == 1) { <text> class="active" </text> } style="position:relative;">
+                    <a href="@Url.Action("Index", new { Type = 1 })">
+                        Темы &nbsp;  <span class="badge bg-blue-steel " style="position:absolute; right:-10px; top:0px; z-index:1000;"></span>
+                    </a>
+                </li>
+                <li @if (Type == 2) { <text> class="active" </text> } style="position:relative;">
+                    <a href="@Url.Action("Index", new { Type = 2 })">
+                        Департаменты &nbsp;  <span class="badge bg-blue-steel " style="position:absolute; right:-10px; top:0px; z-index:1000;"></span>
+                    </a>
+                </li>
+                <li @if (Type == 3) { <text> class="active" </text> } style="position:relative;">
+                    <a href="@Url.Action("Index", new { Type = 3 })">
+                        Уровни  &nbsp; <span class="badge bg-blue-steel " style="position:absolute; right:-10px; top:0px; z-index:1000;"></span>
+                    </a>
+                </li>
+                <li @if (Type == 5) { <text> class="active" </text> } style="position:relative;">
+                    <a href="@Url.Action("Index", new { Type = 6 })">
+                        Компании  &nbsp; <span class="badge bg-blue-steel " style="position:absolute; right:-10px; top:0px; z-index:1000;"></span>
+                    </a>
+                </li>
+                <li @if (Type == 5) { <text> class="active" </text> } style="position:relative;">
+                    <a href="@Url.Action("Index", new { Type = 5 })">
+                        Опросы  &nbsp; <span class="badge bg-blue-steel " style="position:absolute; right:-10px; top:0px; z-index:1000;"></span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-12" id="Table">
+    <div class="m-demo" data-code-preview="true" data-code-html="true" data-code-js="false">
+        <div class="m-demo__preview">
+            <div class="row">
+                <div class="col-lg-6">
+                    <!--begin:1:Portlet-->
+                    <div class="m-portlet m-portlet--tabs">
+                        <div class="m-portlet__head">
+                            <div class="m-portlet__head-label">
+                                <h3 style="padding-top:21px;" class="m-portlet__head-title">
+                                    Все разделы
+                                </h3>
+                            </div>
+                        </div>
+                        <div class="m-portlet__body">
+                            <div id="demo">
+                                <tree-node class="node" :node="treeData.children[0]" v-on:make-folder="makeFolder" v-on:add-node="addItem" v-on:edit-node="editItem"
+                                           v-on:save-node="saveItem" v-on:del-node="delItem" :label="treeData.children[0].Item.NameRu" :editable="editable">
+                                </tree-node>
+                            </div>
+                        </div>
+                    </div>
+                    <!--end::Portlet-->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="DelTree" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Удаление раздел</h4>
+            </div>
+            <div class="modal-body">
+                <div class="swal2-icon swal2-warning swal2-animate-warning-icon" style="display: flex;"><span class="swal2-icon-text">!</span></div>
+                <h2 align="center" class="swal2-title" id="swal2-title">Вы действительно намерены удалить раздел?</h2>
+            </div>
+            <div class="modal-footer">
+                <button type="button" OnClick="demo.deldel(delItem)" class="btn btn-danger">Удалить раздел</button>
+                <button OnClick="mApp.unblockPage('.page-content');" type="button" class="btn btn-default Unblok" data-dismiss="modal">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles
+{
+    <style>
+        body {
+            font-family: "Open Sans", sans-serif;
+            font-size: 18px;
+            font-weight: 300;
+            line-height: 1em;
+        }
+
+        .container {
+            width: 300px;
+            margin: 0 auto;
+        }
+
+        .tree-menu .label-wrapper {
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+            .tree-menu .label-wrapper .has-children {
+                cursor: pointer;
+            }
+
+        .node {
+            cursor: pointer;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        ul {
+            padding-left: 1em;
+            line-height: 1.5em;
+            list-style-type: dot;
+        }
+    </style>
+
+}
+@section Scripts
+{
+    <script src="~/Scripts/vue.js"></script>
+    <script src="~/Scripts/axios.min.js"></script>
+
+    <script type="text/x-template" id="node-template">
+        <div class="label-wrapper">
+            <div :style="indent" :class="labelClasses">
+                <div class="label-wrapper">
+                    <span v-if="node.Item.ParentId" class="has-children" v-on:click="toggle"><i v-if="isFolder" v-on:click="toggleChildren" class="fa" :class="iconClasses"></i></span>
+                    <!--<span v-if="isFolder && editable == 1" style="list-style:none;" class="add" v-on:click="$emit('add-node', node)" title="Добавить дочерний раздел"><i class="fa fa-plus"></i></span>-->
+                    <span style="cursor:default" :class="{bold: isFolder}">{{label}}</span>
+                    <span v-if="editable == 1 && label != '/'" class="has-children"><i v-on:click="toggleEdit" class="fa fa-edit"></i></span>
+                    <span v-if="editable == 1 && label != '/'" class="has-children" title="Удалить раздел"><i v-on:click="trash" class="fa fa-trash"></i></span>
+                    <span v-if="!isFolder && editable == 1" class="add" v-on:click="makeFolder"><i class="fa fa-plus-square" title="Сделать папкой"></i></span>
+                    <span v-if="isFolder && editable == 1 && label != '/'" class="add" v-on:click="exportItem"><i data-offset="60px, 0px" data-toggle="m-tooltip" data-placement="top" data-original-title="Начать изучение" class="fa fa-caret-square-right" title=""></i></span>
+                    <span v-if="!isFolder && editable == 2 && label != '/'" class="add" v-on:click=""><i data-offset="60px, 0px" data-toggle="m-tooltip" data-placement="top" data-original-title="Подать заявку на тренинг" class="fa fa-chalkboard-teacher" title="Подать заявку на тренинг"></i></span>
+                </div>
+                <div v-if="edit">
+                    <input id="editLabel" v-bind:value="label" v-on:change="editName" v-on:input="$emit('edit-node', $event.target.value)" type="text" name="editLabel">
+                </div>
+                <ul v-show="isOpen" v-if="isFolder">
+                    <tree-node class="node" v-for="(child, index) in node.children" :key="index" :node="child" :label="child.Item.NameRu" :editable="editable" v-on:make-folder="$emit('make-folder', $event)"
+                               v-on:add-node="$emit('add-node', $event)" v-on:edit-node="$emit('edit-node', $event)" v-on:save-node="$emit('save-node', $event)"
+                               v-on:del-node="$emit('del-node', $event, index)" v-on:select-edit="$emit('select-edit', $event)">
+                    </tree-node>
+                    <li v-if="editable == 1" style="list-style:none;" class="add" v-on:click="$emit('add-node', node)"><i class="fa fa-plus"></i></li>
+                </ul>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/javascript">
+
+        treeData2 = new Object()
+        treeData2.children =  @Html.Raw(Json.Encode(tree));
+
+        var bufer = "";
+        var delItem = 0;
+        var type = @Type;
+
+        // define the tree-node component
+        Vue.component('tree-node', {
+            template: '#node-template',
+            props: ['node', 'label', 'editable'],
+            data: function () {
+                return {
+                    isOpen: true,
+                    showChildren: true,
+                    edit: false,
+                    name: "",
+                }
+            },
+            computed: {
+                isFolder: function () {
+                    return this.node.children &&
+                        this.node.children.length
+                },
+                iconClasses() {
+                    return {
+                        'fa-folder': !this.showChildren,
+                        'fa-folder-open': this.showChildren
+                    };
+                },
+                labelClasses() {
+                    return { 'has-children': this.children };
+                },
+                indent() {
+                    return { transform: `translate(${this.depth * 20}px)` };
+                },
+            },
+            methods: {
+                toggle: function () {
+                    if (this.isFolder) {
+                        this.isOpen = !this.isOpen
+                    }
+                },
+                makeFolder: function () {
+                    if (!this.isFolder) {
+                        this.$emit('make-folder', this.node);
+                        this.isOpen = true;
+                        this.showChildren = true;
+                    }
+                },
+                editName: function () {
+                    this.$emit('save-node', this.node);
+                    this.edit = false;
+                    //alert("save");
+                },
+                trash: function () {
+                    this.$emit('del-node', this.node);
+                    //alert(this.key);
+                },
+                toggleChildren() {
+                    this.showChildren = !this.showChildren;
+                },
+                toggleEdit() {
+                    this.edit = !this.edit;
+                    if (!this.edit) {
+                        //alert("save")
+                    }
+                },
+                exportItem: function (item) {
+                    learnTree.lTree.children.push(this.node);
+                },
+            }
+        })
+
+        var demo = new Vue({
+            el: '#demo',
+            data: {
+                treeData: treeData2,
+                editable: 1,
+            },
+            methods: {
+                makeFolder: function (node) {
+                    Vue.set(node, 'children', []);
+                    node.Item.ParentId = node.Item.TreeId;
+                    this.addItem(node);
+                },
+                addItem: function (node) {
+                    mApp.blockPage('.page-content');
+                    var parentId = node.Item.TreeId;
+                    //var parentId = 0;
+                    //if (!node.Item.ParentId) {
+                    //    parentId = 2;
+                    //} else {
+                    //    parentId = node.Item.ParentId;
+                    //}
+
+                    axios.post('/AJAX/addCategory/', {
+                        id: parentId, userId: @appUserId, name: "Новый объект", type: type,
+                        }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        }).then(response => {
+                            mApp.unblockPage('.page-content');
+                            node.children.push({
+                                "NameRu": null, "Item": { "TreeId": response.data, "NameRu": "Новый объект", "ParentId": parentId, "IsDeleted": null }, "children": []
+                            });
+                            //alert(response.data);
+                        }).catch(error => {
+                            mApp.unblockPage('.page-content');
+                            alert('Error');
+                    });
+
+                },
+                editItem: function (label) {
+                    bufer = label;
+                    //alert(bufer);
+                },
+                delItem: function (node, i) {
+                    //var parent = _.find(this.treeData.children[0], { 'TreeId': 2, });
+                    //parent = _.filter(this.treeData.children[0], function (o) { return !o.Item.TreeId = 2; });
+                    //parent = null;
+                    //var alertDel = confirm("Вы удаляете раздел, продолжить?");
+                    delItem = node.Item.TreeId;
+                    $('#DelTree').modal('show');
+                    mApp.blockPage('.page-content');
+                    //alert(i);
+
+                },
+                deldel: function (id) {
+                    alert(id);
+                    $.ajax({
+                        type: "POST",
+                        url: "/AJAX/DeleteCategory/",
+                        data: { id: id},
+                        success: function (data) {
+                            if (data == "OK") {
+                                mApp.unblockPage('.page-content');
+                                window.location = '/Tree/Index/'
+                                //parent.children.splice(i, 1);
+                            } else {
+                                alert('Error data');
+                            }
+                        },
+                        error: function () {
+                            alert('Error');
+                            mApp.unblockPage('.page-content');
+                        }
+                    });
+                },
+                saveItem: function (node) {
+                    mApp.blockPage('.page-content');
+                    node.Item.NameRu = bufer;
+                    axios.post('/AJAX/SaveCategory/', {
+                        id: node.Item.TreeId, userId: @appUserId, name: bufer,
+                        }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        }).then(response => {
+                            mApp.unblockPage('.page-content');
+                            alert(response.data);
+                        }).catch(error => {
+                            mApp.unblockPage('.page-content');
+                            alert('Error');
+                    });
+                },
+            }
+        })
+
+    </script>
+}

@@ -1,0 +1,29 @@
+﻿@model IEnumerable<TTS.Models.ViewQuestion> 
+@using TTS.Models;
+@{
+
+    ViewBag.Title = "Попытки закончились!";
+    var tree = (List<Tree>)ViewBag.Tree;
+    var viewResultTest = ViewBag.ViewResultTest;
+    var allRightAnswersCount = ViewBag.AllRightAnswersCount;
+
+}
+
+<div>
+    <h2>Попытки закончились!</h2>
+    <a class="btn btn-danger" href="/">Вернуться на главную страницу</a>
+</div>
+
+
+
+
+@section Scripts
+{
+
+
+}
+
+@section Styles{
+
+
+}
